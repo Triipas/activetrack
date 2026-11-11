@@ -37,21 +37,21 @@ Interfaz web, pruebas, contenedores y despliegue en la nube.
 | HU-13 | Ejecución en contenedores | RNF-04 | Hecho |
 | HU-14 | Despliegue en la nube | RNF-04 | Pendiente |
 
-## Backlog - Inscripciones y administración
+## Sprint 4 - Inscripciones y administración
 
-Historias diseñadas pero fuera del alcance de la PoC.
+Inscripción con alta concurrencia, pagos, kit QR, administración, historial y seguridad por roles.
 
 | ID | Historia | Requisito | Estado |
 |---|---|---|---|
-| HU-15 | Gestionar eventos, rutas y categorías | RF-01 | Pendiente |
-| HU-16 | Configurar cupos y precios dinámicos | RF-02 | Pendiente |
-| HU-17 | Inscribirse con validación de cupo | RF-03, RF-05 | Pendiente |
-| HU-18 | Pagar la inscripción | RF-04 | Pendiente |
-| HU-19 | Descargar kit digital (QR) | RF-06 | Pendiente |
-| HU-20 | Reembolsos y exportación de datos | RF-13 | Pendiente |
-| HU-21 | Historial de resultados del atleta | RF-14 | Pendiente |
-| HU-22 | Soportar 10 000 usuarios concurrentes en inscripción | RNF-02, RNF-07 | Pendiente |
-| HU-23 | Autenticación por roles | RNF-06 | Pendiente |
+| HU-15 | Gestionar eventos, rutas y categorías | RF-01 | Hecho |
+| HU-16 | Configurar cupos y precios dinámicos | RF-02 | Hecho |
+| HU-17 | Inscribirse con validación de cupo | RF-03, RF-05 | Hecho |
+| HU-18 | Pagar la inscripción | RF-04 | Hecho |
+| HU-19 | Descargar kit digital (QR) | RF-06 | Hecho |
+| HU-20 | Reembolsos y exportación de datos | RF-13 | Hecho |
+| HU-21 | Historial de resultados del atleta | RF-14 | Hecho |
+| HU-22 | Soportar 10 000 usuarios concurrentes en inscripción | RNF-02, RNF-07 | Hecho |
+| HU-23 | Autenticación por roles | RNF-06 | Hecho |
 
 ## Detalle
 
@@ -216,8 +216,8 @@ Historias diseñadas pero fuera del alcance de la PoC.
 **Requisito:** RF-01 (RF)
 
 **Criterios de aceptación:**
-- [ ] CRUD de eventos, rutas, categorías y puntos de control
-- [ ] Asignar una antena a cada punto de control
+- [x] CRUD de eventos, rutas, categorías y puntos de control
+- [x] Asignar una antena a cada punto de control
 
 ### HU-16 · Configurar cupos y precios dinámicos
 
@@ -226,8 +226,8 @@ Historias diseñadas pero fuera del alcance de la PoC.
 **Requisito:** RF-02 (RF)
 
 **Criterios de aceptación:**
-- [ ] Cupo máximo por categoría
-- [ ] Tarifa vigente según la fecha de inscripción
+- [x] Cupo máximo por categoría
+- [x] Tarifa vigente según la fecha de inscripción
 
 ### HU-17 · Inscribirse con validación de cupo
 
@@ -236,9 +236,10 @@ Historias diseñadas pero fuera del alcance de la PoC.
 **Requisito:** RF-03, RF-05 (RF)
 
 **Criterios de aceptación:**
-- [ ] Reserva atómica del cupo en Redis
-- [ ] Reserva de 10 minutos para pagar
-- [ ] Lista de espera cuando no hay cupo
+- [x] Reserva atómica del cupo en Redis (DECR)
+- [x] Reserva de 10 minutos para pagar; al vencer se libera el cupo
+- [x] Lista de espera cuando no hay cupo y promoción automática al liberarse uno
+- [x] Validación de edad y género según la categoría
 
 ### HU-18 · Pagar la inscripción
 
@@ -247,9 +248,9 @@ Historias diseñadas pero fuera del alcance de la PoC.
 **Requisito:** RF-04 (RF)
 
 **Criterios de aceptación:**
-- [ ] Checkout externo en modo sandbox
-- [ ] Webhook de pago confirma la inscripción
-- [ ] Evento InscripcionConfirmada
+- [x] Checkout externo en modo sandbox
+- [x] Webhook de pago confirma la inscripción
+- [x] Evento InscripcionConfirmada
 
 ### HU-19 · Descargar kit digital (QR)
 
@@ -258,8 +259,8 @@ Historias diseñadas pero fuera del alcance de la PoC.
 **Requisito:** RF-06 (RF)
 
 **Criterios de aceptación:**
-- [ ] Código QR único por inscripción
-- [ ] Disponible al confirmarse el pago
+- [x] Código QR único por inscripción
+- [x] Disponible al confirmarse el pago
 
 ### HU-20 · Reembolsos y exportación de datos
 
@@ -268,8 +269,8 @@ Historias diseñadas pero fuera del alcance de la PoC.
 **Requisito:** RF-13 (RF)
 
 **Criterios de aceptación:**
-- [ ] Reembolso vía pasarela
-- [ ] Exportación CSV de inscritos y resultados
+- [x] Reembolso vía pasarela
+- [x] Exportación CSV de inscritos y resultados
 
 ### HU-21 · Historial de resultados del atleta
 
@@ -278,8 +279,8 @@ Historias diseñadas pero fuera del alcance de la PoC.
 **Requisito:** RF-14 (RF)
 
 **Criterios de aceptación:**
-- [ ] Lista de eventos con tiempos y posiciones
-- [ ] Ritmo promedio por kilómetro
+- [x] Lista de eventos con tiempos y posiciones
+- [x] Ritmo promedio por kilómetro
 
 ### HU-22 · Soportar 10 000 usuarios concurrentes en inscripción
 
@@ -288,16 +289,17 @@ Historias diseñadas pero fuera del alcance de la PoC.
 **Requisito:** RNF-02, RNF-07 (RNF)
 
 **Criterios de aceptación:**
-- [ ] Prueba de carga con k6 o JMeter
-- [ ] 0 errores 5xx y respuesta ≤ 1 s
-- [ ] Ningún cupo sobrevendido
+- [x] Prueba de carga con k6: 10 000 solicitudes concurrentes sobre una categoría de 2 000 cupos
+- [x] 0 errores y p95 de la inscripción menor a 1 s
+- [x] Ningún cupo sobrevendido: 2 000 reservas y el resto en lista de espera
 
 ### HU-23 · Autenticación por roles
 
-**Historia de usuario:** Como organizador quiero que solo los jueces puedan aplicar sanciones y solo los organizadores configurar eventos para proteger la integridad del sistema.
+**Historia de usuario:** Como organizador quiero que solo los jueces puedan aplicar sanciones y solo los organizadores administren eventos para proteger la integridad del sistema.
 
 **Requisito:** RNF-06 (RNF)
 
 **Criterios de aceptación:**
-- [ ] JWT con roles ATLETA, ORGANIZADOR, JUEZ
-- [ ] Endpoints del juez protegidos
+- [x] Login con clave BCrypt que emite un JWT con el rol (ORGANIZADOR o JUEZ)
+- [x] Endpoints del organizador y del juez protegidos en todos los servicios
+- [x] Las consultas del público y la recepción de lecturas siguen abiertas

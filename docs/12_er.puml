@@ -62,20 +62,29 @@ entity "inscripcion" as ins {
   atleta_id : BIGINT <<FK>>
   categoria_id : BIGINT <<FK>>
   tarifa_id : BIGINT <<FK>>
-  dorsal : INT
+  dorsal : INT <<UK>>
   chip_id : VARCHAR(30) <<UK>>
   estado : VARCHAR(20)
   codigo_qr : VARCHAR(255)
-  expira_en : TIMESTAMP
+  expira_en : TIMESTAMPTZ
+  creada_en : TIMESTAMPTZ
 }
 entity "pago" as pago {
   * id : BIGINT <<PK>>
   --
   inscripcion_id : BIGINT <<FK>>
   monto : NUMERIC(10,2)
-  referencia_pasarela : VARCHAR(80)
+  referencia_pasarela : VARCHAR(80) <<UK>>
   estado : VARCHAR(20)
-  fecha : TIMESTAMP
+  fecha : TIMESTAMPTZ
+}
+entity "usuario" as usr {
+  * id : BIGINT <<PK>>
+  --
+  usuario : VARCHAR(50) <<UK>>
+  clave_hash : VARCHAR(100)
+  rol : VARCHAR(20)
+  nombre : VARCHAR(100)
 }
 entity "lectura_rfid" as lec {
   * id : BIGINT <<PK>>
