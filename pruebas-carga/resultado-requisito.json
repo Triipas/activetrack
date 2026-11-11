@@ -1,0 +1,203 @@
+{
+    "root_group": {
+        "name": "",
+        "path": "",
+        "id": "d41d8cd98f00b204e9800998ecf8427e",
+        "groups": {
+            "setup": {
+                "name": "setup",
+                "path": "::setup",
+                "id": "5c0f8025f7e0b6654089e5b00e950f1a",
+                "groups": {},
+                "checks": {
+                        "evento de prueba creado": {
+                            "name": "evento de prueba creado",
+                            "path": "::setup::evento de prueba creado",
+                            "id": "e6bb12722d5c7082230a26a0d0a0cfcb",
+                            "passes": 1,
+                            "fails": 0
+                        }
+                    }
+            },
+            "teardown": {
+                "checks": {
+                    "sin sobreventa: reservas = cupo": {
+                        "name": "sin sobreventa: reservas = cupo",
+                        "path": "::teardown::sin sobreventa: reservas = cupo",
+                        "id": "a38861ac76f3777fcecfa46b8703a0ed",
+                        "passes": 1,
+                        "fails": 0
+                    },
+                    "todas las solicitudes registradas": {
+                        "name": "todas las solicitudes registradas",
+                        "path": "::teardown::todas las solicitudes registradas",
+                        "id": "83ea0fbb7bd4497ee2f09b6a6d7fd972",
+                        "passes": 1,
+                        "fails": 0
+                    },
+                    "contador de cupos en 0": {
+                        "id": "9ded88b41b6761638faa059652f2a4fe",
+                        "passes": 1,
+                        "fails": 0,
+                        "name": "contador de cupos en 0",
+                        "path": "::teardown::contador de cupos en 0"
+                    }
+                },
+                "name": "teardown",
+                "path": "::teardown",
+                "id": "a8a9942382e8ffe2e56ef29e664b8229",
+                "groups": {}
+            }
+        },
+        "checks": {
+            "inscripción aceptada (202)": {
+                "name": "inscripción aceptada (202)",
+                "path": "::inscripción aceptada (202)",
+                "id": "ebfaeb87bb9d76a78a6c6967dd76b5c0",
+                "passes": 10000,
+                "fails": 0
+            }
+        }
+    },
+    "metrics": {
+        "vus": {
+            "value": 0,
+            "min": 0,
+            "max": 2
+        },
+        "vus_max": {
+            "value": 200,
+            "min": 200,
+            "max": 200
+        },
+        "inscripciones_en_espera": {
+            "count": 8000,
+            "rate": 73.02477947481394
+        },
+        "http_req_receiving": {
+            "p(95)": 0.19926790000000003,
+            "avg": 0.12668798710515794,
+            "min": 0.039351,
+            "med": 0.11298549999999999,
+            "max": 4.714484,
+            "p(90)": 0.1801385
+        },
+        "iteration_duration": {
+            "avg": 8.258117952544369,
+            "min": 0.035203,
+            "med": 8.164578,
+            "max": 37.643138,
+            "p(90)": 9.621855400000001,
+            "p(95)": 10.4725616
+        },
+        "http_req_waiting": {
+            "avg": 7.935396415733703,
+            "min": 3.94489,
+            "med": 7.7127405,
+            "max": 89.453221,
+            "p(90)": 9.1399439,
+            "p(95)": 9.943320550000003
+        },
+        "http_req_duration{tipo:inscripcion}": {
+            "med": 7.8828405,
+            "max": 33.470546,
+            "p(90)": 9.316250400000001,
+            "p(95)": 10.146977799999997,
+            "avg": 8.10361981150003,
+            "min": 4.138438,
+            "thresholds": {
+                "p(95)<1000": false
+            }
+        },
+        "data_sent": {
+            "rate": 28831.3148207384,
+            "count": 3158524
+        },
+        "checks": {
+            "passes": 10004,
+            "fails": 0,
+            "thresholds": {
+                "rate>0.99": false
+            },
+            "value": 1
+        },
+        "http_req_blocked": {
+            "med": 0.006261,
+            "max": 29.177449,
+            "p(90)": 0.008445400000000002,
+            "p(95)": 0.009578100000000003,
+            "avg": 0.01992983456617359,
+            "min": 0.003063
+        },
+        "inscripciones_reservadas": {
+            "count": 2000,
+            "rate": 18.256194868703485
+        },
+        "http_req_duration{expected_response:true}": {
+            "med": 7.883255,
+            "max": 89.818046,
+            "p(90)": 9.3172125,
+            "p(95)": 10.1513939,
+            "avg": 8.113249570571803,
+            "min": 4.138438
+        },
+        "http_req_failed": {
+            "passes": 0,
+            "fails": 10004,
+            "thresholds": {
+                "rate<0.01": false
+            },
+            "value": 0
+        },
+        "http_reqs": {
+            "count": 10004,
+            "rate": 91.31748673325482
+        },
+        "iterations": {
+            "count": 10199,
+            "rate": 93.09746573295341
+        },
+        "http_req_duration": {
+            "p(95)": 10.1513939,
+            "avg": 8.113249570571803,
+            "min": 4.138438,
+            "med": 7.883255,
+            "max": 89.818046,
+            "p(90)": 9.3172125
+        },
+        "http_req_tls_handshaking": {
+            "max": 0,
+            "p(90)": 0,
+            "p(95)": 0,
+            "avg": 0,
+            "min": 0,
+            "med": 0
+        },
+        "http_req_connecting": {
+            "min": 0,
+            "med": 0,
+            "max": 29.096507,
+            "p(90)": 0,
+            "p(95)": 0,
+            "avg": 0.01091394292283086
+        },
+        "data_received": {
+            "count": 4838408,
+            "rate": 44165.45965114694
+        },
+        "http_req_sending": {
+            "avg": 0.05116516773290683,
+            "min": 0.012036,
+            "med": 0.048152,
+            "max": 2.321045,
+            "p(90)": 0.0746255,
+            "p(95)": 0.08599865
+        }
+    },
+    "setup_data": {
+        "eventoId": 5,
+        "run": "72163",
+        "token": "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJvcmdhbml6YWRvciIsInJvbGVzIjpbIk9SR0FOSVpBRE9SIl0sImlzcyI6ImFjdGl2ZXRyYWNrIiwiZXhwIjoxNzk0Mzk0MTcyLCJpYXQiOjE3OTQzNjUzNzIsIm5vbWJyZSI6Ik9yZ2FuaXphY2nDs24gQWN0aXZlVHJhY2sifQ.asM8aS6ii-e7OvsgTjRppeYBqF3JDNMrrlWgsr56ahs",
+        "categoriaId": 11
+    }
+}

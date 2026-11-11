@@ -1,0 +1,203 @@
+{
+    "root_group": {
+        "checks": {
+            "inscripción aceptada (202)": {
+                "fails": 0,
+                "name": "inscripción aceptada (202)",
+                "path": "::inscripción aceptada (202)",
+                "id": "ebfaeb87bb9d76a78a6c6967dd76b5c0",
+                "passes": 10000
+            }
+        },
+        "name": "",
+        "path": "",
+        "id": "d41d8cd98f00b204e9800998ecf8427e",
+        "groups": {
+            "setup": {
+                "name": "setup",
+                "path": "::setup",
+                "id": "5c0f8025f7e0b6654089e5b00e950f1a",
+                "groups": {},
+                "checks": {
+                        "evento de prueba creado": {
+                            "name": "evento de prueba creado",
+                            "path": "::setup::evento de prueba creado",
+                            "id": "e6bb12722d5c7082230a26a0d0a0cfcb",
+                            "passes": 1,
+                            "fails": 0
+                        }
+                    }
+            },
+            "teardown": {
+                "name": "teardown",
+                "path": "::teardown",
+                "id": "a8a9942382e8ffe2e56ef29e664b8229",
+                "groups": {},
+                "checks": {
+                        "sin sobreventa: reservas = cupo": {
+                            "id": "a38861ac76f3777fcecfa46b8703a0ed",
+                            "passes": 1,
+                            "fails": 0,
+                            "name": "sin sobreventa: reservas = cupo",
+                            "path": "::teardown::sin sobreventa: reservas = cupo"
+                        },
+                        "todas las solicitudes registradas": {
+                            "id": "83ea0fbb7bd4497ee2f09b6a6d7fd972",
+                            "passes": 1,
+                            "fails": 0,
+                            "name": "todas las solicitudes registradas",
+                            "path": "::teardown::todas las solicitudes registradas"
+                        },
+                        "contador de cupos en 0": {
+                            "name": "contador de cupos en 0",
+                            "path": "::teardown::contador de cupos en 0",
+                            "id": "9ded88b41b6761638faa059652f2a4fe",
+                            "passes": 1,
+                            "fails": 0
+                        }
+                    }
+            }
+        }
+    },
+    "metrics": {
+        "inscripciones_en_espera": {
+            "count": 8000,
+            "rate": 464.19597699911094
+        },
+        "http_req_sending": {
+            "p(95)": 0.13029330000000022,
+            "avg": 0.32612225769692244,
+            "min": 0.003322,
+            "med": 0.019070499999999997,
+            "max": 78.433026,
+            "p(90)": 0.048505400000000046
+        },
+        "http_req_blocked": {
+            "max": 1124.74339,
+            "p(90)": 0.008529400000000001,
+            "p(95)": 0.37293580000000354,
+            "avg": 23.11417057237095,
+            "min": 0.000638,
+            "med": 0.004484
+        },
+        "checks": {
+            "passes": 10004,
+            "fails": 0,
+            "thresholds": {
+                "rate>0.99": false
+            },
+            "value": 1
+        },
+        "http_req_failed": {
+            "passes": 0,
+            "fails": 10004,
+            "thresholds": {
+                "rate<0.01": false
+            },
+            "value": 0
+        },
+        "http_req_waiting": {
+            "p(90)": 1327.7138605,
+            "p(95)": 1491.92820055,
+            "avg": 807.2232550543779,
+            "min": 11.652843,
+            "med": 738.481585,
+            "max": 3113.446292
+        },
+        "http_req_duration": {
+            "med": 740.5068625,
+            "max": 3113.89071,
+            "p(90)": 1328.3925308,
+            "p(95)": 1494.6192341000003,
+            "avg": 808.3639302272103,
+            "min": 13.327934
+        },
+        "iteration_duration": {
+            "avg": 832.2834953689979,
+            "min": 13.542466,
+            "med": 746.1886195,
+            "max": 3844.669235,
+            "p(90)": 1368.7342926000001,
+            "p(95)": 1637.0385975999989
+        },
+        "vus_max": {
+            "value": 500,
+            "min": 500,
+            "max": 500
+        },
+        "http_req_tls_handshaking": {
+            "avg": 0,
+            "min": 0,
+            "med": 0,
+            "max": 0,
+            "p(90)": 0,
+            "p(95)": 0
+        },
+        "iterations": {
+            "count": 10000,
+            "rate": 580.2449712488886
+        },
+        "http_reqs": {
+            "count": 10004,
+            "rate": 580.4770692373882
+        },
+        "http_req_duration{expected_response:true}": {
+            "med": 740.5068625,
+            "max": 3113.89071,
+            "p(90)": 1328.3925308,
+            "p(95)": 1494.6192341000003,
+            "avg": 808.3639302272103,
+            "min": 13.327934
+        },
+        "vus": {
+            "value": 189,
+            "min": 189,
+            "max": 500
+        },
+        "http_req_receiving": {
+            "p(95)": 4.503903800000006,
+            "avg": 0.8145529151339457,
+            "min": 0.012111,
+            "med": 0.10864650000000001,
+            "max": 73.296568,
+            "p(90)": 1.5979074000000013
+        },
+        "http_req_duration{tipo:inscripcion}": {
+            "avg": 808.6726677003011,
+            "min": 13.327934,
+            "med": 740.7290780000001,
+            "max": 3113.89071,
+            "p(90)": 1328.4076772,
+            "p(95)": 1494.7599325499998,
+            "thresholds": {
+                "p(95)<1000": true
+            }
+        },
+        "data_sent": {
+            "count": 3158524,
+            "rate": 183271.76675689247
+        },
+        "http_req_connecting": {
+            "med": 0,
+            "max": 1124.696217,
+            "p(90)": 0,
+            "p(95)": 0.06778570000000342,
+            "avg": 23.053166384046385,
+            "min": 0
+        },
+        "data_received": {
+            "count": 4827299,
+            "rate": 280101.5969464789
+        },
+        "inscripciones_reservadas": {
+            "rate": 116.04899424977773,
+            "count": 2000
+        }
+    },
+    "setup_data": {
+        "token": "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJvcmdhbml6YWRvciIsInJvbGVzIjpbIk9SR0FOSVpBRE9SIl0sImlzcyI6ImFjdGl2ZXRyYWNrIiwiZXhwIjoxNzk0Mzk0MTAzLCJpYXQiOjE3OTQzNjUzMDMsIm5vbWJyZSI6Ik9yZ2FuaXphY2nDs24gQWN0aXZlVHJhY2sifQ.RDISMRaYVy9JgeRQfbSK6SHICgaykDqLRzOAZTGLTXI",
+        "categoriaId": 10,
+        "eventoId": 4,
+        "run": "03605"
+    }
+}
