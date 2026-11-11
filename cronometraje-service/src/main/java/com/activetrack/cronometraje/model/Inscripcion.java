@@ -18,13 +18,13 @@ public class Inscripcion {
     @Column(name = "chip_id")
     private String chipId;
 
-    private int dorsal;
+    private Integer dorsal;
     private String estado;
 
     protected Inscripcion() {
     }
 
-    public Inscripcion(Long id, String chipId, int dorsal, String estado) {
+    public Inscripcion(Long id, String chipId, Integer dorsal, String estado) {
         this.id = id;
         this.chipId = chipId;
         this.dorsal = dorsal;
@@ -37,6 +37,6 @@ public class Inscripcion {
 
     public Long getId() { return id; }
     public String getChipId() { return chipId; }
-    public int getDorsal() { return dorsal; }
+    public Integer getDorsal() { return dorsal; }
     public String getEstado() { return estado; }
 }

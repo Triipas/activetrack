@@ -3,12 +3,14 @@
 -- Se ejecuta automáticamente al crear el contenedor de PostgreSQL.
 -- =====================================================================
 
+CREATE EXTENSION IF NOT EXISTS pgcrypto;   -- para guardar las claves con BCrypt
+
 CREATE TABLE evento (
     id      BIGSERIAL PRIMARY KEY,
     nombre  VARCHAR(150) NOT NULL,
-    tipo    VARCHAR(20)  NOT NULL,           -- MARATON, TRIATLON, CICLISMO
+    tipo    VARCHAR(20)  NOT NULL,           -- MARATON, TRIATLON, CICLISMO, CARRERA
     fecha   TIMESTAMPTZ  NOT NULL,           -- hora oficial de largada
-    estado  VARCHAR(20)  NOT NULL            -- PROGRAMADO, EN_CURSO, FINALIZADO
+    estado  VARCHAR(30)  NOT NULL            -- INSCRIPCIONES_ABIERTAS, EN_CURSO, FINALIZADO
 );
 
 CREATE TABLE ruta (
@@ -62,20 +64,31 @@ CREATE TABLE inscripcion (
     atleta_id     BIGINT NOT NULL REFERENCES atleta(id),
     categoria_id  BIGINT NOT NULL REFERENCES categoria(id),
     tarifa_id     BIGINT NOT NULL REFERENCES tarifa(id),
-    dorsal        INT NOT NULL,
-    chip_id       VARCHAR(30) NOT NULL UNIQUE,
-    estado        VARCHAR(20) NOT NULL,      -- PENDIENTE_PAGO, CONFIRMADA, EXPIRADA, EN_ESPERA
+    dorsal        INT UNIQUE,                -- se asigna al confirmar el pago
+    chip_id       VARCHAR(30) UNIQUE,        -- se asigna al confirmar el pago
+    estado        VARCHAR(20) NOT NULL,      -- PENDIENTE_PAGO, CONFIRMADA, EXPIRADA, EN_ESPERA, ANULADA
     codigo_qr     VARCHAR(255),
-    expira_en     TIMESTAMPTZ
+    expira_en     TIMESTAMPTZ,               -- fin del plazo para pagar
+    creada_en     TIMESTAMPTZ NOT NULL DEFAULT now()  -- orden de la lista de espera
 );
+
+CREATE SEQUENCE dorsal_seq START 200;
 
 CREATE TABLE pago (
     id                   BIGSERIAL PRIMARY KEY,
     inscripcion_id       BIGINT NOT NULL REFERENCES inscripcion(id),
     monto                NUMERIC(10,2) NOT NULL,
-    referencia_pasarela  VARCHAR(80),
-    estado               VARCHAR(20) NOT NULL,
+    referencia_pasarela  VARCHAR(80) UNIQUE,
+    estado               VARCHAR(20) NOT NULL,   -- PENDIENTE, APROBADO, RECHAZADO, REEMBOLSADO
     fecha                TIMESTAMPTZ NOT NULL
+);
+
+CREATE TABLE usuario (
+    id             BIGSERIAL PRIMARY KEY,
+    usuario        VARCHAR(50) NOT NULL UNIQUE,
+    clave_hash     VARCHAR(100) NOT NULL,        -- BCrypt
+    rol            VARCHAR(20) NOT NULL,         -- ORGANIZADOR, JUEZ
+    nombre         VARCHAR(100) NOT NULL
 );
 
 CREATE TABLE lectura_rfid (
@@ -112,7 +125,8 @@ CREATE TABLE penalizacion (
 );
 
 CREATE INDEX idx_lectura_inscripcion ON lectura_rfid (inscripcion_id);
-CREATE INDEX idx_inscripcion_categoria ON inscripcion (categoria_id);
+CREATE INDEX idx_inscripcion_categoria ON inscripcion (categoria_id, estado, creada_en);
+CREATE INDEX idx_inscripcion_atleta ON inscripcion (atleta_id);
 
 -- =====================================================================
 -- Datos semilla: un evento con 12 atletas inscritos (datos ficticios)
@@ -170,3 +184,32 @@ INSERT INTO inscripcion (atleta_id, categoria_id, tarifa_id, dorsal, chip_id, es
 INSERT INTO pago (inscripcion_id, monto, referencia_pasarela, estado, fecha)
 SELECT i.id, t.precio, 'SANDBOX-' || i.dorsal, 'APROBADO', '2026-08-15 10:00:00-05'
 FROM inscripcion i JOIN tarifa t ON t.id = i.tarifa_id;
+
+-- =====================================================================
+-- Evento 2: inscripciones abiertas (para probar inscripción, pago y lista de espera)
+-- =====================================================================
+
+INSERT INTO evento (nombre, tipo, fecha, estado)
+VALUES ('Carrera 10K Arequipa 2027', 'CARRERA', '2027-03-21 07:00:00-05', 'INSCRIPCIONES_ABIERTAS');
+
+INSERT INTO ruta (evento_id, nombre, distancia_km) VALUES (2, 'Ruta 10K', 10.000);
+
+INSERT INTO punto_control (ruta_id, nombre, km, orden, es_meta, antena_id) VALUES
+    (2, 'Salida',     0.000, 0, FALSE, 'ANT2-SALIDA'),
+    (2, 'Control 5K', 5.000, 1, FALSE, 'ANT2-5K'),
+    (2, 'Meta',      10.000, 2, TRUE,  'ANT2-META');
+
+INSERT INTO categoria (evento_id, nombre, edad_min, edad_max, genero, cupo_maximo) VALUES
+    (2, 'Varones 18-39', 18, 39, 'M', 100),
+    (2, 'Damas 18-39',   18, 39, 'F', 100),
+    (2, 'Varones 40+',   40, 99, 'M', 50),
+    (2, 'Damas 40+',     40, 99, 'F', 3);   -- cupo pequeño para probar la lista de espera
+
+INSERT INTO tarifa (evento_id, nombre, precio, vigente_desde, vigente_hasta) VALUES
+    (2, 'Early Bird', 80.00,  '2026-10-01', '2026-12-31'),
+    (2, 'Regular',    100.00, '2027-01-01', '2027-03-15');
+
+-- Usuarios de demostración (claves: organizador123 / juez123)
+INSERT INTO usuario (usuario, clave_hash, rol, nombre) VALUES
+    ('organizador', crypt('organizador123', gen_salt('bf', 10)), 'ORGANIZADOR', 'Organización ActiveTrack'),
+    ('juez',        crypt('juez123',        gen_salt('bf', 10)), 'JUEZ',        'Juez de ruta');

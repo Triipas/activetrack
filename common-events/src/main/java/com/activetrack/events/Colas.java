@@ -13,9 +13,14 @@ public final class Colas {
 
     public static final String RK_CRUCE = "cronometraje.cruce";
     public static final String RK_RESULTADO = "resultados.actualizado";
+    public static final String RK_INSCRIPCION_RESERVADA = "inscripciones.reservada";
+    public static final String RK_INSCRIPCION_CONFIRMADA = "inscripciones.confirmada";
+    /** Patrón que escucha todos los eventos de inscripción. */
+    public static final String RK_INSCRIPCIONES = "inscripciones.#";
 
     public static final String COLA_RESULTADOS_CRUCES = "resultados.cruces";
     public static final String COLA_NOTIFICACIONES_RESULTADOS = "notificaciones.resultados";
+    public static final String COLA_NOTIFICACIONES_INSCRIPCIONES = "notificaciones.inscripciones";
 
     private Colas() {
     }
