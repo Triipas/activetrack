@@ -8,6 +8,8 @@ x-servicio: &servicio
     DB_PASSWORD: activetrack
     RABBIT_HOST: rabbitmq
     REDIS_HOST: redis
+    # Clave compartida para firmar y validar los JWT (cambiarla en producción)
+    JWT_SECRET: ${JWT_SECRET:-activetrack-clave-de-desarrollo-cambiar-en-produccion}
   depends_on:
     postgres:
       condition: service_healthy
@@ -78,6 +80,15 @@ services:
     ports:
       - "8083:8083"
 
+  inscripciones-service:
+    <<: *servicio
+    build:
+      context: .
+      args:
+        MODULE: inscripciones-service
+    ports:
+      - "8084:8084"
+
   frontend:
     image: nginx:1.27-alpine
     volumes:
@@ -89,3 +100,4 @@ services:
       - cronometraje-service
       - resultados-service
       - notificaciones-service
+      - inscripciones-service
