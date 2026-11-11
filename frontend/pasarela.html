@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Pasarela sandbox</title>
+  <style>
+    :root { font-family: "Segoe UI", system-ui, -apple-system, Roboto, sans-serif; color: #18212b; background: #eef1f5; }
+    body { margin: 0; min-height: 100vh; display: grid; place-items: center; padding: 16px; }
+    .caja { background: #fff; border: 1px solid #dfe4ea; border-radius: 14px; padding: 1.75rem; width: min(420px, 100%);
+      box-shadow: 0 10px 30px rgba(16, 24, 40, .12); display: grid; gap: .9rem; }
+    .marca { display: flex; justify-content: space-between; align-items: center; }
+    .sandbox { font-size: .75rem; font-weight: 700; padding: .25rem .6rem; border-radius: 999px; background: #fff1d6; color: #8a5300; }
+    .monto { font-size: 2rem; font-weight: 700; }
+    .desc { color: #5b6876; margin: 0; }
+    label { display: grid; gap: .3rem; font-size: .85rem; color: #5b6876; }
+    input { font: inherit; padding: .55rem .6rem; border: 1px solid #dfe4ea; border-radius: 8px; }
+    .fila { display: grid; grid-template-columns: 1fr 1fr; gap: .6rem; }
+    button { font: inherit; font-weight: 600; padding: .65rem 1rem; border-radius: 8px; cursor: pointer; border: 1px solid #1f4e79; }
+    .aprobar { background: #1f4e79; color: #fff; }
+    .rechazar { background: #fff; color: #b3261e; border-color: #f0c2bf; }
+    .resultado { padding: .85rem 1rem; border-radius: 8px; background: #eef8f2; border: 1px solid #cfe9da; }
+    .resultado.mal { background: #fdf0ef; border-color: #f0c9c5; }
+    small { color: #5b6876; }
+    [hidden] { display: none !important; }
+  </style>
+</head>
+<body>
+<main class="caja">
+  <div class="marca"><strong>Pasarela de pruebas</strong><span class="sandbox">SANDBOX</span></div>
+  <div>
+    <div class="monto" id="monto">—</div>
+    <p class="desc" id="descripcion">Cargando cobro…</p>
+  </div>
+  <label>Tarjeta de prueba <input value="4111 1111 1111 1111" readonly></label>
+  <div class="fila">
+    <label>Vence <input value="12/30" readonly></label>
+    <label>CVV <input value="123" readonly></label>
+  </div>
+  <div class="fila" id="botones">
+    <button class="aprobar" id="btn-aprobar">Pagar</button>
+    <button class="rechazar" id="btn-rechazar">Rechazar</button>
+  </div>
+  <div id="resultado"></div>
+  <small>Pasarela simulada para la PoC: al decidir, notifica a ActiveTrack por el webhook <code>/api/pagos/webhook</code>,
+    igual que una pasarela real.</small>
+</main>
+<script>
+  'use strict';
+  const ref = new URLSearchParams(location.search).get('ref');
+  const $ = (s) => document.querySelector(s);
+
+  async function cargar() {
+    const r = await fetch(`/api/pagos/${encodeURIComponent(ref)}`);
+    const p = await r.json();
+    if (!r.ok) throw new Error(p.error);
+    $('#monto').textContent = `S/ ${Number(p.monto).toFixed(2)}`;
+    $('#descripcion').textContent = p.descripcion;
+    if (p.estado !== 'PENDIENTE') terminar(p.estado);
+  }
+
+  async function notificar(estado) {
+    $('#botones').hidden = true;
+    const r = await fetch('/api/pagos/webhook', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ referencia: ref, estado }),
+    });
+    const p = await r.json();
+    terminar(r.ok ? p.estado : 'ERROR', p.error);
+  }
+
+  function terminar(estado, error) {
+    $('#botones').hidden = true;
+    const textos = {
+      APROBADO: 'Pago aprobado. Tu inscripción está confirmada; vuelve a ActiveTrack para ver tu kit.',
+      RECHAZADO: 'Pago rechazado. Puedes volver a intentarlo desde ActiveTrack mientras tu reserva siga vigente.',
+      REEMBOLSADO: 'La reserva había vencido: el pago se reembolsó automáticamente.',
+    };
+    $('#resultado').className = `resultado ${estado === 'APROBADO' ? '' : 'mal'}`;
+    $('#resultado').textContent = textos[estado] || error || 'No se pudo procesar el pago.';
+  }
+
+  $('#btn-aprobar').addEventListener('click', () => notificar('APROBADO'));
+  $('#btn-rechazar').addEventListener('click', () => notificar('RECHAZADO'));
+  cargar().catch((e) => { $('#descripcion').textContent = e.message; $('#botones').hidden = true; });
+</script>
+</body>
+</html>

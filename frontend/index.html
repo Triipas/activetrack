@@ -15,17 +15,50 @@
       <small id="nombre-evento">Cargando evento…</small>
     </div>
   </div>
-  <div class="estado-conexion" id="estado-ws" title="Conexión en tiempo real">
-    <span class="punto"></span><span class="texto">Conectando…</span>
+  <div class="barra-derecha">
+    <div class="estado-conexion" id="estado-ws" title="Conexión en tiempo real">
+      <span class="punto"></span><span class="texto">Conectando…</span>
+    </div>
+    <div class="sesion" id="sesion">
+      <span class="sesion-usuario" id="sesion-usuario"></span>
+      <button class="mini secundario-oscuro" id="btn-sesion">Iniciar sesión</button>
+    </div>
   </div>
 </header>
 
 <nav class="pestanas" role="tablist">
   <button role="tab" class="activa" data-panel="vivo">En vivo</button>
   <button role="tab" data-panel="seguir">Seguir atletas</button>
+  <button role="tab" data-panel="inscripciones">Inscripciones</button>
   <button role="tab" data-panel="juez">Juez</button>
+  <button role="tab" data-panel="organizador">Organizador</button>
   <button role="tab" data-panel="simulador">Simulador RFID</button>
 </nav>
+
+<dialog id="dialogo-login" class="dialogo">
+  <form method="dialog" id="form-login" class="columna-form">
+    <h2>Iniciar sesión</h2>
+    <p class="ayuda" id="login-motivo">Acceso para organizadores y jueces.</p>
+    <label>Usuario <input id="login-usuario" autocomplete="username" required></label>
+    <label>Clave <input id="login-clave" type="password" autocomplete="current-password" required></label>
+    <p class="ayuda">Demo: <code>organizador</code> / <code>organizador123</code> · <code>juez</code> / <code>juez123</code></p>
+    <p class="error-form" id="login-error"></p>
+    <div class="botones">
+      <button type="submit" id="btn-login">Entrar</button>
+      <button type="button" class="secundario" id="btn-cancelar-login">Cancelar</button>
+    </div>
+  </form>
+</dialog>
+
+<dialog id="dialogo-kit" class="dialogo">
+  <div class="kit">
+    <h2>Kit digital</h2>
+    <div id="kit-qr" class="kit-qr"></div>
+    <p id="kit-detalle"></p>
+    <p class="ayuda">Presenta este código para recoger tu dorsal y chip.</p>
+    <button class="secundario" id="btn-cerrar-kit">Cerrar</button>
+  </div>
+</dialog>
 
 <main>
   <!-- ============ LEADERBOARD ============ -->
@@ -93,12 +126,57 @@
     </div>
   </section>
 
+  <!-- ============ INSCRIPCIONES ============ -->
+  <section id="inscripciones" class="panel">
+    <div class="cabecera-panel">
+      <div>
+        <h1>Inscripciones</h1>
+        <p class="ayuda">El cupo se reserva al instante; tienes un plazo para pagar. Si no hay cupo, quedas en lista de espera.</p>
+      </div>
+    </div>
+    <div id="catalogo" class="catalogo"></div>
+    <p class="vacio" id="catalogo-vacio">No hay eventos con inscripciones abiertas.</p>
+
+    <div class="dos-columnas">
+      <div class="tarjeta" id="tarjeta-form-inscripcion">
+        <h2 id="titulo-form-inscripcion">Elige un evento</h2>
+        <form class="rejilla-form" id="form-inscripcion">
+          <label class="ancho">Categoría <select id="ins-categoria" required></select></label>
+          <label class="ancho">Nombres y apellidos <input id="ins-nombres" required maxlength="150"></label>
+          <label>Documento <input id="ins-documento" required pattern="[A-Za-z0-9\-]{6,20}" maxlength="20"></label>
+          <label>Fecha de nacimiento <input id="ins-nacimiento" type="date" required></label>
+          <label>Género
+            <select id="ins-genero" required><option value="F">Femenino</option><option value="M">Masculino</option></select>
+          </label>
+          <label>Correo <input id="ins-email" type="email" required maxlength="120"></label>
+          <button type="submit" class="ancho" id="btn-inscribir" disabled>Inscribirme</button>
+        </form>
+        <div id="resultado-inscripcion"></div>
+      </div>
+      <div class="tarjeta">
+        <h2>Mis inscripciones y resultados</h2>
+        <form class="fila-form" id="form-mis-inscripciones">
+          <input id="mis-documento" placeholder="Número de documento" required pattern="[A-Za-z0-9\-]{6,20}">
+          <button type="submit">Consultar</button>
+        </form>
+        <ul class="feed" id="mis-inscripciones"></ul>
+        <div id="historial"></div>
+      </div>
+    </div>
+    <div class="tarjeta">
+      <h2>Correos enviados (simulado)</h2>
+      <p class="ayuda">Los envía el Servicio de Notificaciones al consumir <code>InscripcionReservada</code> e <code>InscripcionConfirmada</code>.</p>
+      <ul class="feed compacto" id="correos"></ul>
+    </div>
+  </section>
+
   <!-- ============ JUEZ ============ -->
   <section id="juez" class="panel">
     <div class="cabecera-panel">
       <div>
         <h1>Panel del juez</h1>
-        <p class="ayuda">Anomalías detectadas automáticamente (puntos de control omitidos) y estado de las antenas.</p>
+        <p class="ayuda">Anomalías detectadas automáticamente (puntos de control omitidos) y estado de las antenas.
+          Requiere iniciar sesión como juez.</p>
       </div>
       <button class="secundario" id="btn-refrescar-juez">Actualizar</button>
     </div>
@@ -121,6 +199,95 @@
         </table>
       </div>
     </div>
+  </section>
+
+  <!-- ============ ORGANIZADOR ============ -->
+  <section id="organizador" class="panel">
+    <div class="cabecera-panel">
+      <div>
+        <h1>Panel del organizador</h1>
+        <p class="ayuda">Cupos, tarifas, inscritos, reembolsos y exportación. Requiere iniciar sesión como organizador.</p>
+      </div>
+      <div class="controles">
+        <label>Evento <select id="org-evento"></select></label>
+        <button class="secundario" id="btn-refrescar-org">Actualizar</button>
+      </div>
+    </div>
+    <div id="org-contenido" hidden>
+      <div class="tarjeta">
+        <div class="fila-titulo">
+          <h2 id="org-titulo">Evento</h2>
+          <div class="botones sin-margen">
+            <select id="org-estado">
+              <option value="INSCRIPCIONES_ABIERTAS">Inscripciones abiertas</option>
+              <option value="INSCRIPCIONES_CERRADAS">Inscripciones cerradas</option>
+              <option value="EN_CURSO">En curso</option>
+              <option value="FINALIZADO">Finalizado</option>
+            </select>
+            <button class="mini secundario" id="btn-org-estado">Cambiar estado</button>
+            <button class="mini secundario" id="btn-csv-inscritos">Inscritos (CSV)</button>
+            <button class="mini secundario" id="btn-csv-resultados">Resultados (CSV)</button>
+          </div>
+        </div>
+        <div class="tabla-contenedor">
+          <table class="tabla">
+            <thead><tr><th>Categoría</th><th class="num">Cupo</th><th class="num">Disponibles</th><th class="num">Confirmadas</th>
+              <th class="num">Pend. pago</th><th class="num">En espera</th><th>Cambiar cupo</th></tr></thead>
+            <tbody id="org-categorias"></tbody>
+          </table>
+        </div>
+      </div>
+      <div class="dos-columnas">
+        <div class="tarjeta">
+          <h2>Tarifas (precio dinámico)</h2>
+          <ul class="feed compacto" id="org-tarifas"></ul>
+          <form class="rejilla-form" id="form-tarifa">
+            <label>Nombre <input id="tar-nombre" required placeholder="Última semana"></label>
+            <label>Precio (S/) <input id="tar-precio" type="number" min="0" step="0.01" required></label>
+            <label>Desde <input id="tar-desde" type="date" required></label>
+            <label>Hasta <input id="tar-hasta" type="date" required></label>
+            <button type="submit" class="ancho">Agregar tarifa</button>
+          </form>
+        </div>
+        <div class="tarjeta">
+          <h2>Crear evento</h2>
+          <form class="columna-form" id="form-evento">
+            <div class="rejilla-form sin-margen">
+              <label class="ancho">Nombre <input id="ev-nombre" required value="Media Maratón Arequipa 2027"></label>
+              <label>Tipo
+                <select id="ev-tipo"><option>CARRERA</option><option selected>MARATON</option><option>TRIATLON</option><option>CICLISMO</option></select>
+              </label>
+              <label>Largada <input id="ev-fecha" type="datetime-local" required value="2027-06-20T06:30"></label>
+              <label>Ruta <input id="ev-ruta" required value="Ruta 21K"></label>
+              <label>Distancia (km) <input id="ev-distancia" type="number" step="0.001" min="0.1" required value="21.097"></label>
+            </div>
+            <label>Puntos de control <small>(nombre;km;antena)</small>
+              <textarea id="ev-puntos" rows="3">Salida;0;ANT3-SALIDA
+Control 10K;10;ANT3-10K
+Meta;21.097;ANT3-META</textarea></label>
+            <label>Categorías <small>(nombre;edad mín;edad máx;M/F/X;cupo)</small>
+              <textarea id="ev-categorias" rows="3">Varones 18-39;18;39;M;300
+Damas 18-39;18;39;F;300
+Open 40+;40;99;X;200</textarea></label>
+            <label>Tarifas <small>(nombre;precio;desde;hasta)</small>
+              <textarea id="ev-tarifas" rows="2">Early Bird;70;2026-11-01;2027-01-31
+Regular;90;2027-02-01;2027-06-10</textarea></label>
+            <button type="submit">Crear evento</button>
+          </form>
+        </div>
+      </div>
+      <div class="tarjeta">
+        <h2>Últimas inscripciones</h2>
+        <div class="tabla-contenedor">
+          <table class="tabla">
+            <thead><tr><th class="num">#</th><th class="num">Dorsal</th><th>Atleta</th><th>Documento</th><th>Categoría</th>
+              <th>Tarifa</th><th>Estado</th><th></th></tr></thead>
+            <tbody id="org-inscripciones"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    <p class="vacio" id="org-sin-sesion">Inicia sesión como organizador para ver este panel.</p>
   </section>
 
   <!-- ============ SIMULADOR ============ -->
@@ -166,5 +333,7 @@
 </main>
 
 <script src="app.js"></script>
+<script src="inscripciones.js"></script>
+<script src="organizador.js"></script>
 </body>
 </html>

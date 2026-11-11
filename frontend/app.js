@@ -36,15 +36,117 @@ function debounce(fn, ms) {
   return (...args) => { clearTimeout(t); t = setTimeout(() => fn(...args), ms); };
 }
 
-async function api(url, opciones = {}) {
-  const resp = await fetch(url, {
-    headers: { 'Content-Type': 'application/json' },
-    ...opciones,
-  });
+/**
+ * Llama a la API. Con `rol` exige una sesión con ese rol (ORGANIZADOR o JUEZ) y envía el JWT.
+ * Con `crudo` devuelve la respuesta sin interpretar (para descargar archivos).
+ */
+async function api(url, { rol, crudo, ...opciones } = {}) {
+  const headers = { 'Content-Type': 'application/json' };
+  if (rol) {
+    const s = await exigirSesion(rol);
+    headers.Authorization = `Bearer ${s.token}`;
+  }
+  const resp = await fetch(url, { ...opciones, headers });
+  if (resp.status === 401 || resp.status === 403) {
+    if (rol) cerrarSesion();
+    throw new Error(rol ? `Necesitas iniciar sesión como ${rol.toLowerCase()}` : 'No autorizado');
+  }
+  if (crudo) {
+    if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+    return resp;
+  }
   const texto = await resp.text();
   const datos = texto ? JSON.parse(texto) : null;
   if (!resp.ok) throw new Error(datos?.error || `HTTP ${resp.status}`);
   return datos;
+}
+
+/* ------------------------------------------------------------------ sesión (JWT) */
+function leerSesion() {
+  try {
+    const s = JSON.parse(sessionStorage.getItem('at-sesion') || 'null');
+    return s && Date.parse(s.expiraEn) > Date.now() ? s : null;
+  } catch { return null; }
+}
+let sesion = leerSesion();
+
+function pintarSesion() {
+  $('#sesion-usuario').textContent = sesion ? `${sesion.nombre} · ${sesion.rol.toLowerCase()}` : '';
+  $('#btn-sesion').textContent = sesion ? 'Salir' : 'Iniciar sesión';
+}
+
+function cerrarSesion() {
+  sesion = null;
+  try { sessionStorage.removeItem('at-sesion'); } catch { /* sin almacenamiento */ }
+  pintarSesion();
+}
+
+let resolverLogin = null;
+function pedirLogin(rol) {
+  $('#login-motivo').textContent = rol ? `Esta acción requiere el rol ${rol.toLowerCase()}.` : 'Acceso para organizadores y jueces.';
+  $('#login-usuario').value = rol === 'JUEZ' ? 'juez' : rol === 'ORGANIZADOR' ? 'organizador' : '';
+  $('#login-clave').value = '';
+  $('#login-error').textContent = '';
+  $('#dialogo-login').showModal();
+  $('#login-clave').focus();
+  return new Promise((ok, falla) => { resolverLogin = { ok, falla, rol }; });
+}
+
+async function exigirSesion(rol) {
+  if (sesion && sesion.rol === rol) return sesion;
+  return pedirLogin(rol);
+}
+
+$('#form-login').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  try {
+    const s = await api('/api/auth/login', {
+      method: 'POST',
+      body: JSON.stringify({ usuario: $('#login-usuario').value.trim(), clave: $('#login-clave').value }),
+    });
+    if (resolverLogin?.rol && s.rol !== resolverLogin.rol) {
+      $('#login-error').textContent = `Ese usuario es ${s.rol.toLowerCase()}; se necesita ${resolverLogin.rol.toLowerCase()}.`;
+      return;
+    }
+    sesion = s;
+    try { sessionStorage.setItem('at-sesion', JSON.stringify(s)); } catch { /* sin almacenamiento */ }
+    pintarSesion();
+    $('#dialogo-login').close();
+    resolverLogin?.ok(s);
+    resolverLogin = null;
+    if (panelActivo() === 'juez') cargarJuez().catch(console.error);
+    if (panelActivo() === 'organizador') cargarOrganizador().catch(console.error);
+  } catch (err) {
+    $('#login-error').textContent = err.message;
+  }
+});
+
+function cancelarLogin() {
+  $('#dialogo-login').close();
+  resolverLogin?.falla(new Error('Inicio de sesión cancelado'));
+  resolverLogin = null;
+}
+$('#btn-cancelar-login').addEventListener('click', cancelarLogin);
+$('#dialogo-login').addEventListener('cancel', (e) => { e.preventDefault(); cancelarLogin(); });
+
+$('#btn-sesion').addEventListener('click', () => {
+  if (sesion) {
+    cerrarSesion();
+    if (panelActivo() === 'organizador') cargarOrganizador().catch(console.error);
+  } else {
+    pedirLogin(null).catch(() => {});
+  }
+});
+
+/** Descarga un archivo protegido (ej. CSV) usando el token. */
+async function descargar(url, nombre, rol) {
+  const resp = await api(url, { rol, crudo: true });
+  const blob = await resp.blob();
+  const enlace = document.createElement('a');
+  enlace.href = URL.createObjectURL(blob);
+  enlace.download = nombre;
+  enlace.click();
+  URL.revokeObjectURL(enlace.href);
 }
 
 function cargarSeguidos() {
@@ -59,8 +161,10 @@ document.querySelectorAll('.pestanas button').forEach((btn) => {
   btn.addEventListener('click', () => {
     document.querySelectorAll('.pestanas button').forEach((b) => b.classList.toggle('activa', b === btn));
     document.querySelectorAll('.panel').forEach((p) => p.classList.toggle('activo', p.id === btn.dataset.panel));
-    if (btn.dataset.panel === 'juez') cargarJuez();
+    if (btn.dataset.panel === 'juez') cargarJuez().catch(console.error);
     if (btn.dataset.panel === 'seguir') cargarHistorialPush();
+    if (btn.dataset.panel === 'inscripciones') cargarInscripciones().catch(console.error);
+    if (btn.dataset.panel === 'organizador') cargarOrganizador().catch(console.error);
   });
 });
 const panelActivo = () => document.querySelector('.panel.activo')?.id;
@@ -218,10 +322,18 @@ const refrescarPush = debounce(cargarHistorialPush, 300);
 
 /* ------------------------------------------------------------------ juez */
 async function cargarJuez() {
-  const [anomalias, antenas] = await Promise.all([
-    api(`/api/eventos/${EVENTO_ID}/anomalias`),
-    api(`/api/antenas?eventoId=${EVENTO_ID}`),
-  ]);
+  const antenas = await api(`/api/antenas?eventoId=${EVENTO_ID}`);
+  pintarAntenas(antenas);
+  if (sesion?.rol !== 'JUEZ') {
+    $('#tabla-anomalias').innerHTML = '';
+    $('#anomalias-vacio').innerHTML = 'Inicia sesión como <b>juez</b> para revisar las anomalías. '
+      + '<button class="mini" id="btn-login-juez">Iniciar sesión</button>';
+    $('#anomalias-vacio').style.display = 'block';
+    $('#btn-login-juez').onclick = () => pedirLogin('JUEZ').catch(() => {});
+    return;
+  }
+  const anomalias = await api(`/api/eventos/${EVENTO_ID}/anomalias`, { rol: 'JUEZ' });
+  $('#anomalias-vacio').textContent = 'Sin anomalías pendientes.';
   $('#tabla-anomalias').innerHTML = anomalias.map((a) => `
     <tr>
       <td class="num">${a.dorsal}</td>
@@ -235,7 +347,9 @@ async function cargarJuez() {
       </td>
     </tr>`).join('');
   $('#anomalias-vacio').style.display = anomalias.length ? 'none' : 'block';
+}
 
+function pintarAntenas(antenas) {
   $('#tabla-antenas').innerHTML = antenas.map((a) => `
     <tr>
       <td>${esc(a.antenaId)}</td>
@@ -260,6 +374,7 @@ $('#tabla-anomalias').addEventListener('click', async (e) => {
   };
   try {
     await api(`/api/resultados/${btn.dataset.insc}/penalizaciones`, {
+      rol: 'JUEZ',
       method: 'POST',
       body: JSON.stringify({ tipo, segundos: Number(btn.dataset.seg || 0), motivo: motivos[tipo], juez: 'Juez de ruta' }),
     });
@@ -340,9 +455,14 @@ $('#btn-detener').addEventListener('click', () => terminarSimulacion('Simulació
 
 $('#btn-reiniciar').addEventListener('click', async () => {
   if (!confirm('¿Borrar todas las lecturas, resultados y penalizaciones del evento?')) return;
+  try {
+    await api(`/api/lecturas?eventoId=${EVENTO_ID}`, { method: 'DELETE', rol: 'ORGANIZADOR' });
+    await api(`/api/eventos/${EVENTO_ID}/resultados`, { method: 'DELETE', rol: 'ORGANIZADOR' });
+  } catch (err) {
+    logSim(err.message, true);
+    return;
+  }
   terminarSimulacion('Demo reiniciada.');
-  await api(`/api/lecturas?eventoId=${EVENTO_ID}`, { method: 'DELETE' });
-  await api(`/api/eventos/${EVENTO_ID}/resultados`, { method: 'DELETE' });
   $('#barra-progreso').style.width = '0';
   $('#feed').innerHTML = '';
   $('#feed-vacio').style.display = 'block';
@@ -357,6 +477,7 @@ $('#form-manual').addEventListener('submit', (e) => {
 
 /* ------------------------------------------------------------------ inicio */
 async function iniciar() {
+  pintarSesion();
   try {
     const [evento, categorias, atletas, antenas] = await Promise.all([
       api(`/api/eventos/${EVENTO_ID}`),
