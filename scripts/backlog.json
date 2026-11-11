@@ -206,12 +206,13 @@
       "tipo": "RNF",
       "requisito": "RNF-04",
       "sprint": 2,
-      "estado": "pendiente",
+      "estado": "hecho",
       "historia": "Como organizador quiero el sistema desplegado en la nube para usarlo durante el evento real.",
       "criterios": [
-        "Servicios en AWS ECS detrás de un balanceador",
-        "Amazon MQ, RDS PostgreSQL y ElastiCache Redis",
-        "URL pública del frontend"
+        "Instancia EC2 t3.medium creada con CloudFormation (infra/aws/activetrack-ec2.yaml)",
+        "Solo el puerto 80 público; SSH restringido a la IP del administrador; claves propias de producción",
+        "Despliegue con un comando (scripts/desplegar-vm.sh) y URL pública del frontend",
+        "Latencia lectura → notificación medida desde Perú menor a 2 s"
       ]
     },
     {

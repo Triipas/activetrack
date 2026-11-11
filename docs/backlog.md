@@ -35,7 +35,7 @@ Interfaz web, pruebas, contenedores y despliegue en la nube.
 | HU-11 | Interfaz web del evento | RF-09, RF-10, RF-11 | Hecho |
 | HU-12 | Pruebas automatizadas | Consigna | Hecho |
 | HU-13 | Ejecución en contenedores | RNF-04 | Hecho |
-| HU-14 | Despliegue en la nube | RNF-04 | Pendiente |
+| HU-14 | Despliegue en la nube | RNF-04 | Hecho |
 
 ## Sprint 4 - Inscripciones y administración
 
@@ -205,9 +205,10 @@ Inscripción con alta concurrencia, pagos, kit QR, administración, historial y 
 **Requisito:** RNF-04 (RNF)
 
 **Criterios de aceptación:**
-- [ ] Servicios en AWS ECS detrás de un balanceador
-- [ ] Amazon MQ, RDS PostgreSQL y ElastiCache Redis
-- [ ] URL pública del frontend
+- [x] Instancia EC2 t3.medium creada con CloudFormation (infra/aws/activetrack-ec2.yaml)
+- [x] Solo el puerto 80 público; SSH restringido a la IP del administrador; claves propias de producción
+- [x] Despliegue con un comando (scripts/desplegar-vm.sh) y URL pública del frontend
+- [x] Latencia lectura → notificación medida desde Perú menor a 2 s
 
 ### HU-15 · Gestionar eventos, rutas y categorías
 

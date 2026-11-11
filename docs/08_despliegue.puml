@@ -9,24 +9,30 @@ node "Dispositivo del usuario" as dev {
   artifact "Navegador / PWA" as br
 }
 node "Lector RFID en pista" as hw
-rectangle "Nube AWS" #F5F9FD {
-  node "Load Balancer (ALB)" as alb
-  node "Cluster ECS (contenedores Docker)" as ecs {
-    artifact "inscripciones-service x N" as a1
-    artifact "cronometraje-service x N" as a2
-    artifact "resultados-service x N" as a3
-    artifact "notificaciones-service x N" as a4
+rectangle "AWS us-east-1 (VPC por defecto)" #F5F9FD {
+  node "Elastic IP y Security Group (80 público, 22 solo administrador)" as sg
+  node "EC2 t3.medium - Ubuntu 24.04 - Docker Compose" as ec2 {
+    artifact "frontend (Nginx)" as fe
+    artifact "inscripciones-service" as s1
+    artifact "cronometraje-service" as s2
+    artifact "resultados-service" as s3
+    artifact "notificaciones-service" as s4
+    artifact "RabbitMQ" as mq
+    artifact "PostgreSQL (volumen persistente)" as pg
+    artifact "Redis" as rd
   }
-  node "Amazon MQ (RabbitMQ)" as mq
-  database "Amazon RDS\nPostgreSQL" as rds
-  database "ElastiCache\nRedis" as redis
-  node "S3 + CloudFront\n(frontend estático)" as s3
 }
-br --> s3 : HTTPS
-br --> alb : HTTPS / WSS
-hw --> alb : TCP / REST
-alb --> ecs
-ecs --> mq
-ecs --> rds : JDBC
-ecs --> redis : RESP
+br --> sg : HTTP / WS
+hw --> sg : HTTP (REST)
+sg --> fe : :80
+fe --> s1
+fe --> s2
+fe --> s3
+fe --> s4
+s1 --> mq
+s2 --> mq
+mq --> s3
+mq --> s4
+s3 --> pg
+s3 --> rd
 @enduml

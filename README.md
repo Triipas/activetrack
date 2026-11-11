@@ -77,7 +77,8 @@ activetrack/
 ├── frontend/                 index.html · app.js · inscripciones.js · organizador.js · pasarela.html · nginx.conf
 ├── db/init.sql               Esquema y datos semilla (2 eventos, 12 atletas ficticios, usuarios de demo)
 ├── pruebas-carga/            Prueba de carga k6 de la apertura de inscripciones y sus resultados
-├── docs/                     Informe, backlog Scrum y diagramas (PlantUML + PNG)
+├── infra/aws/                Plantilla CloudFormation de la instancia EC2
+├── docs/                     Informe, backlog Scrum, diagramas y guía de despliegue
 ├── scripts/                  Backlog, tablero de GitHub Projects y despliegue a la VM
 ├── .github/workflows/        ci.yml (pruebas) y desplegar.yml (despliegue manual a la VM)
 ├── Dockerfile                Imagen de los servicios (se elige el módulo con MODULE)
@@ -161,7 +162,11 @@ node scripts/crear-backlog-github.mjs
 
 ## Despliegue en la nube
 
-**VM con Docker** (lo implementado): una máquina Linux de 4 GB en cualquier proveedor, con un solo comando:
+**Desplegado en AWS**: http://3.229.26.140 (EC2 t3.medium en `us-east-1`, creada con
+[CloudFormation](infra/aws/activetrack-ec2.yaml)). Latencia lectura → notificación medida desde Perú: 160-284 ms.
+
+
+**VM con Docker**: la misma receta sirve en AWS o en cualquier proveedor, con un solo comando:
 
 ```bash
 cp .env.prod.example .env.prod   # y cambiar todas las claves

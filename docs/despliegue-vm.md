@@ -7,7 +7,32 @@ con ajustes de producción ([`docker-compose.prod.yml`](../docker-compose.prod.y
 - Claves propias para la base de datos, RabbitMQ y la firma de los JWT; las claves de demostración de `organizador` y `juez` se reemplazan al desplegar.
 - Datos de PostgreSQL en un volumen persistente y límites de memoria por contenedor.
 
-## 1. Crear la VM
+## Despliegue actual en AWS
+
+La instancia se crea con la plantilla [`infra/aws/activetrack-ec2.yaml`](../infra/aws/activetrack-ec2.yaml)
+(CloudFormation): EC2 **t3.medium** con Ubuntu 24.04 en la VPC por defecto de `us-east-1`, disco gp3 cifrado de 30 GB,
+IMDSv2 obligatorio, IP elástica, y un grupo de seguridad con el puerto 80 abierto y el 22 solo para la IP del administrador.
+Docker y 2 GB de swap se instalan al arrancar (user-data).
+
+```bash
+aws ec2 create-key-pair --key-name activetrack-aws --key-type ed25519 --query KeyMaterial --output text > ~/.ssh/activetrack-aws.pem
+aws cloudformation deploy --stack-name activetrack --template-file infra/aws/activetrack-ec2.yaml \
+  --parameter-overrides KeyName=activetrack-aws SshCidr=$(curl -s https://checkip.amazonaws.com)/32
+aws cloudformation describe-stacks --stack-name activetrack --query "Stacks[0].Outputs"
+scripts/desplegar-vm.sh ubuntu@IP_ELASTICA ~/.ssh/activetrack-aws.pem
+```
+
+Costo aproximado: ~30 USD/mes por la instancia, más ~3,6 USD/mes por la IP pública y ~2,4 USD/mes por el disco.
+Para eliminar todo y dejar de pagar:
+
+```bash
+aws cloudformation delete-stack --stack-name activetrack
+aws ec2 delete-key-pair --key-name activetrack-aws
+```
+
+Si cambia tu IP pública, vuelve a ejecutar el `deploy` con el nuevo `SshCidr` para recuperar el acceso SSH.
+
+## 1. Crear la VM (otros proveedores)
 
 | Requisito | Valor |
 |---|---|
