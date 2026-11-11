@@ -1,0 +1,170 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ActiveTrack · En vivo</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<header class="barra">
+  <div class="marca">
+    <span class="logo" aria-hidden="true">AT</span>
+    <div>
+      <strong>ActiveTrack</strong>
+      <small id="nombre-evento">Cargando evento…</small>
+    </div>
+  </div>
+  <div class="estado-conexion" id="estado-ws" title="Conexión en tiempo real">
+    <span class="punto"></span><span class="texto">Conectando…</span>
+  </div>
+</header>
+
+<nav class="pestanas" role="tablist">
+  <button role="tab" class="activa" data-panel="vivo">En vivo</button>
+  <button role="tab" data-panel="seguir">Seguir atletas</button>
+  <button role="tab" data-panel="juez">Juez</button>
+  <button role="tab" data-panel="simulador">Simulador RFID</button>
+</nav>
+
+<main>
+  <!-- ============ LEADERBOARD ============ -->
+  <section id="vivo" class="panel activo">
+    <div class="cabecera-panel">
+      <div>
+        <h1>Leaderboard en vivo</h1>
+        <p class="ayuda">Se actualiza solo cuando un atleta cruza un punto de control (sin recargar).</p>
+      </div>
+      <div class="controles">
+        <label>Categoría
+          <select id="filtro-categoria"><option value="">General</option></select>
+        </label>
+        <div class="latencia" id="latencia">
+          <span class="etiqueta">Latencia última lectura</span>
+          <span class="valor">—</span>
+        </div>
+      </div>
+    </div>
+    <div class="tabla-contenedor">
+      <table class="tabla">
+        <thead>
+        <tr>
+          <th class="num">Pos.</th><th class="num">Dorsal</th><th>Atleta</th><th>Categoría</th>
+          <th>Último punto</th><th class="num">Tiempo neto</th><th class="num">Tiempo bruto</th><th>Estado</th>
+        </tr>
+        </thead>
+        <tbody id="tabla-leaderboard"></tbody>
+      </table>
+      <p class="vacio" id="leaderboard-vacio">Aún no hay lecturas. Inicia una carrera desde la pestaña <b>Simulador RFID</b>.</p>
+    </div>
+  </section>
+
+  <!-- ============ SEGUIR ATLETAS ============ -->
+  <section id="seguir" class="panel">
+    <div class="cabecera-panel">
+      <div>
+        <h1>Seguir atletas</h1>
+        <p class="ayuda">Cada atleta seguido es un <b>Subject</b>; este navegador se suscribe como <b>Observer</b>
+          y recibe un aviso en cada punto de control.</p>
+      </div>
+      <button class="secundario" id="btn-permiso">Activar notificaciones del navegador</button>
+    </div>
+    <div class="dos-columnas">
+      <div class="tarjeta">
+        <h2>Atletas</h2>
+        <ul class="lista-atletas" id="lista-atletas"></ul>
+      </div>
+      <div class="tarjeta">
+        <h2>Notificaciones recibidas</h2>
+        <ul class="feed" id="feed"></ul>
+        <p class="vacio" id="feed-vacio">Sigue a uno o más atletas para recibir sus cruces aquí.</p>
+      </div>
+    </div>
+    <div class="tarjeta">
+      <h2>Canal push (simulado)</h2>
+      <p class="ayuda">Registra un token de dispositivo para un atleta; el servicio agrega un <code>PushSeguidor</code>.
+        En producción el envío iría a Firebase Cloud Messaging.</p>
+      <form class="fila-form" id="form-push">
+        <select id="push-atleta" required></select>
+        <input id="push-token" placeholder="Token del dispositivo" value="celular-demo-01" required>
+        <button type="submit">Suscribir push</button>
+      </form>
+      <ul class="feed compacto" id="historial-push"></ul>
+    </div>
+  </section>
+
+  <!-- ============ JUEZ ============ -->
+  <section id="juez" class="panel">
+    <div class="cabecera-panel">
+      <div>
+        <h1>Panel del juez</h1>
+        <p class="ayuda">Anomalías detectadas automáticamente (puntos de control omitidos) y estado de las antenas.</p>
+      </div>
+      <button class="secundario" id="btn-refrescar-juez">Actualizar</button>
+    </div>
+    <div class="tarjeta">
+      <h2>Anomalías por revisar</h2>
+      <div class="tabla-contenedor">
+        <table class="tabla">
+          <thead><tr><th class="num">Dorsal</th><th>Atleta</th><th>Último punto</th><th>Puntos omitidos</th><th>Decisión</th></tr></thead>
+          <tbody id="tabla-anomalias"></tbody>
+        </table>
+        <p class="vacio" id="anomalias-vacio">Sin anomalías pendientes.</p>
+      </div>
+    </div>
+    <div class="tarjeta">
+      <h2>Antenas RFID</h2>
+      <div class="tabla-contenedor">
+        <table class="tabla">
+          <thead><tr><th>Antena</th><th>Punto de control</th><th class="num">Km</th><th class="num">Lecturas</th><th>Última señal</th></tr></thead>
+          <tbody id="tabla-antenas"></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ SIMULADOR ============ -->
+  <section id="simulador" class="panel">
+    <div class="cabecera-panel">
+      <div>
+        <h1>Simulador de antenas RFID</h1>
+        <p class="ayuda">Reemplaza al hardware: envía lecturas a <code>POST /api/lecturas</code> como lo haría cada antena.</p>
+      </div>
+    </div>
+    <div class="dos-columnas">
+      <div class="tarjeta">
+        <h2>Carrera completa</h2>
+        <label>Velocidad
+          <select id="sim-velocidad">
+            <option value="120">x120 (≈ 1,5 min)</option>
+            <option value="300" selected>x300 (≈ 45 s)</option>
+            <option value="600">x600 (≈ 20 s)</option>
+          </select>
+        </label>
+        <label class="check"><input type="checkbox" id="sim-anomalia" checked> El dorsal 107 omite el control 10K (genera anomalía)</label>
+        <label class="check"><input type="checkbox" id="sim-duplicados" checked> Enviar lecturas repetidas (la antena lee el chip varias veces)</label>
+        <div class="botones">
+          <button id="btn-simular">Iniciar carrera</button>
+          <button class="secundario" id="btn-detener" disabled>Detener</button>
+          <button class="peligro" id="btn-reiniciar">Reiniciar demo</button>
+        </div>
+        <div class="progreso"><div class="barra-progreso" id="barra-progreso"></div></div>
+        <p class="ayuda" id="sim-estado">Listo.</p>
+      </div>
+      <div class="tarjeta">
+        <h2>Lectura manual</h2>
+        <form class="columna-form" id="form-manual">
+          <label>Chip <select id="manual-chip"></select></label>
+          <label>Antena <select id="manual-antena"></select></label>
+          <button type="submit">Enviar lectura</button>
+        </form>
+        <h2>Registro de envíos</h2>
+        <ul class="feed compacto" id="log-sim"></ul>
+      </div>
+    </div>
+  </section>
+</main>
+
+<script src="app.js"></script>
+</body>
+</html>
