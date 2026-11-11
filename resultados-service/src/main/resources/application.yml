@@ -32,6 +32,10 @@ spring:
           max-attempts: 3
           initial-interval: 500ms
 
+seguridad:
+  jwt:
+    secreto: ${JWT_SECRET:activetrack-clave-de-desarrollo-cambiar-en-produccion}
+
 logging:
   level:
     com.activetrack: INFO
