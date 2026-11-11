@@ -47,7 +47,9 @@ activetrack/
 ├── notificaciones-service/   controller · service · observer · messaging · config
 ├── frontend/                 index.html · styles.css · app.js · nginx.conf
 ├── db/init.sql               Esquema y datos semilla (1 evento, 12 atletas ficticios)
-├── docs/                     Diagramas de arquitectura (PlantUML + PNG)
+├── docs/                     Informe, backlog Scrum y diagramas (PlantUML + PNG)
+├── scripts/                  Backlog (JSON) y script que crea el tablero en GitHub Projects
+├── .github/workflows/ci.yml  Pruebas automáticas en GitHub Actions
 ├── Dockerfile                Imagen de los servicios (se elige el módulo con MODULE)
 └── docker-compose.yml
 ```
@@ -78,6 +80,22 @@ Pruebas unitarias (JUnit 5 + Mockito), no necesitan Docker:
 ```
 
 En Windows: `mvnw.cmd test`.
+
+Cada push a `main` ejecuta las pruebas y la construcción de las imágenes en GitHub Actions (`.github/workflows/ci.yml`).
+
+## Scrum
+
+- Backlog con 23 historias de usuario (RF y RNF) organizadas en sprints: [docs/backlog.md](docs/backlog.md).
+- Para crearlas como issues en un **GitHub Project** (con milestones por sprint y las historias terminadas cerradas):
+
+```bash
+node scripts/crear-backlog-github.mjs
+```
+
+## Documentación
+
+- Informe del proyecto (Modelo 4+1, C4, ADRs, patrón Observer): [docs/informe/Informe_ActiveTrack_Arquitectura.docx](docs/informe/Informe_ActiveTrack_Arquitectura.docx)
+- Diagramas fuente en PlantUML: [docs/](docs/)
 
 ## API principal
 
