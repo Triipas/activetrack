@@ -20,6 +20,8 @@ cd "$DIRECTORIO"
 
 echo "--> Construyendo y levantando los contenedores"
 "${COMPOSE[@]}" up -d --build --remove-orphans </dev/null
+# Nginx lee su configuración (montada desde el código) solo al arrancar
+"${COMPOSE[@]}" restart frontend </dev/null
 
 echo "--> Esperando a la base de datos"
 for _ in $(seq 1 60); do
