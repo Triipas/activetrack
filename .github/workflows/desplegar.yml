@@ -1,0 +1,28 @@
+name: Desplegar en la VM
+
+# Despliegue manual (pestaña Actions → "Desplegar en la VM" → Run workflow).
+# Secretos necesarios en Settings → Secrets and variables → Actions:
+#   VM_HOST      IP o dominio de la VM
+#   VM_USER      usuario SSH con sudo (ej. ubuntu)
+#   VM_SSH_KEY   clave privada SSH para ese usuario
+#   ENV_PROD     contenido completo del archivo .env.prod
+on:
+  workflow_dispatch:
+
+jobs:
+  desplegar:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Preparar clave SSH y variables
+        env:
+          VM_SSH_KEY: ${{ secrets.VM_SSH_KEY }}
+          ENV_PROD: ${{ secrets.ENV_PROD }}
+        run: |
+          install -m 600 /dev/null ~/clave_vm
+          printf '%s\n' "$VM_SSH_KEY" > ~/clave_vm
+          printf '%s\n' "$ENV_PROD" > .env.prod
+
+      - name: Desplegar
+        run: scripts/desplegar-vm.sh "${{ secrets.VM_USER }}@${{ secrets.VM_HOST }}" ~/clave_vm

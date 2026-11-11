@@ -5,3 +5,5 @@ target/
 *.log
 .DS_Store
 .impeccable/
+.env
+.env.prod

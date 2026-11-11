@@ -1,0 +1,64 @@
+# Ajustes de producción para una VM en la nube. Se usa junto con docker-compose.yml:
+#   docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --build
+#
+# - Solo el frontend (Nginx) queda expuesto a Internet; bases de datos, broker y servicios quedan en la red interna.
+# - Claves tomadas del archivo .env (ver .env.prod.example); el despliegue falla si falta alguna.
+# - Datos de PostgreSQL en un volumen persistente y límites de memoria para caber en una VM de 4 GB.
+
+x-claves: &claves
+  DB_PASSWORD: ${DB_PASSWORD:?Define DB_PASSWORD en .env}
+  RABBIT_USER: ${RABBIT_USER:?Define RABBIT_USER en .env}
+  RABBIT_PASSWORD: ${RABBIT_PASSWORD:?Define RABBIT_PASSWORD en .env}
+  JWT_SECRET: ${JWT_SECRET:?Define JWT_SECRET en .env}
+
+services:
+  postgres:
+    ports: !reset []
+    environment:
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?Define DB_PASSWORD en .env}
+    volumes:
+      - datos-postgres:/var/lib/postgresql/data
+    restart: unless-stopped
+    mem_limit: 512m
+
+  redis:
+    ports: !reset []
+    restart: unless-stopped
+    mem_limit: 128m
+
+  rabbitmq:
+    ports: !reset []
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBIT_USER:?Define RABBIT_USER en .env}
+      RABBITMQ_DEFAULT_PASS: ${RABBIT_PASSWORD:?Define RABBIT_PASSWORD en .env}
+    restart: unless-stopped
+    mem_limit: 512m
+
+  cronometraje-service:
+    ports: !reset []
+    environment: *claves
+    mem_limit: 512m
+
+  resultados-service:
+    ports: !reset []
+    environment: *claves
+    mem_limit: 512m
+
+  notificaciones-service:
+    ports: !reset []
+    environment: *claves
+    mem_limit: 448m
+
+  inscripciones-service:
+    ports: !reset []
+    environment: *claves
+    mem_limit: 512m
+
+  frontend:
+    ports: !override
+      - "${PUERTO_HTTP:-80}:80"
+    restart: unless-stopped
+    mem_limit: 64m
+
+volumes:
+  datos-postgres:
