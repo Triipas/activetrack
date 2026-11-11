@@ -1,0 +1,20 @@
+@startuml
+!pragma layout smetana
+!include <C4/C4_Context>
+LAYOUT_TOP_DOWN()
+Person(atleta, "Atleta", "Se inscribe, paga y consulta resultados")
+Person(espectador, "Espectador", "Sigue atletas en vivo")
+Person(org, "Organizador", "Configura eventos, cupos y precios")
+Person(juez, "Juez / Cronometrador", "Calibra sensores y resuelve disputas")
+System(at, "ActiveTrack", "Plataforma de gestión y cronometraje de eventos deportivos")
+System_Ext(rfid, "Hardware RFID", "Antenas MyLaps / ChronoTrack")
+System_Ext(pay, "Pasarela de Pagos", "Procesa cobros y reembolsos")
+System_Ext(push, "Servicio Push", "Firebase Cloud Messaging")
+Rel(atleta, at, "Usa", "HTTPS")
+Rel(espectador, at, "Sigue en vivo", "HTTPS / WSS")
+Rel(org, at, "Administra", "HTTPS")
+Rel(juez, at, "Opera", "HTTPS")
+Rel(rfid, at, "Envía lecturas", "TCP / REST")
+Rel(at, pay, "Solicita cobros", "REST")
+Rel(at, push, "Envía notificaciones", "REST")
+@enduml

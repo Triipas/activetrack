@@ -1,0 +1,34 @@
+@startuml
+!pragma layout smetana
+!include style.iuml
+hide empty members
+interface SeguidorAtleta <<Observer>> {
+  + actualizar(cruce : CruceDTO) : void
+}
+class AtletaSeguido <<Subject>> {
+  - atletaId : Long
+  - seguidores : List<SeguidorAtleta>
+  + suscribir(s : SeguidorAtleta) : void
+  + desuscribir(s : SeguidorAtleta) : void
+  + registrarCruce(cruce : CruceDTO) : void
+  - notificar(cruce : CruceDTO) : void
+}
+class WebSocketSeguidor <<ConcreteObserver>> {
+  - sesionId : String
+  + actualizar(cruce : CruceDTO) : void
+}
+class PushSeguidor <<ConcreteObserver>> {
+  - tokenDispositivo : String
+  + actualizar(cruce : CruceDTO) : void
+}
+class ResultadoEventListener <<Client>> {
+  + onResultadoActualizado(evt) : void
+}
+AtletaSeguido o-right-> "0..*" SeguidorAtleta : notifica
+SeguidorAtleta <|.. WebSocketSeguidor
+SeguidorAtleta <|.. PushSeguidor
+ResultadoEventListener --> AtletaSeguido : registrarCruce()
+note bottom of AtletaSeguido
+  notificar(): for (s : seguidores) s.actualizar(cruce)
+end note
+@enduml

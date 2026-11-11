@@ -1,0 +1,39 @@
+@startuml
+!pragma layout smetana
+!include style.iuml
+left to right direction
+skinparam usecase {
+  BackgroundColor #EAF2FB
+  BorderColor #1F4E79
+}
+actor "Atleta" as at
+actor "Espectador" as es
+actor "Organizador" as org
+actor "Juez /\nCronometrador" as juez
+actor "Antena RFID" as rfid
+actor "Pasarela\nde Pagos" as pg
+rectangle "ActiveTrack" {
+  usecase "CU-01 Gestionar evento,\nrutas y categorías" as UC1
+  usecase "CU-02 Configurar cupos\ny precios" as UC2
+  usecase "CU-03 Inscribirse\ny pagar" as UC3
+  usecase "CU-04 Descargar kit\ndigital (QR)" as UC4
+  usecase "CU-05 Registrar lectura\nde punto de control" as UC5
+  usecase "CU-06 Consultar\nLeaderboard en vivo" as UC6
+  usecase "CU-07 Seguir atleta y\nrecibir notificaciones" as UC7
+  usecase "CU-08 Resolver disputas\ny penalizaciones" as UC8
+  usecase "CU-09 Monitorear\nhardware RFID" as UC9
+  usecase "CU-10 Emitir reembolsos\ny exportar datos" as UC10
+}
+org --> UC1
+org --> UC2
+org --> UC10
+at --> UC3
+at --> UC4
+at --> UC6
+es --> UC6
+es --> UC7
+juez --> UC8
+juez --> UC9
+UC3 --> pg
+rfid --> UC5
+@enduml

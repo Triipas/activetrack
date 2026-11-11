@@ -1,0 +1,31 @@
+@startuml
+!include style.iuml
+skinparam sequenceParticipantBorderColor #1F4E79
+skinparam sequenceParticipantBackgroundColor #EAF2FB
+skinparam sequenceLifeLineBorderColor #90A4AE
+hide footbox
+skinparam maxMessageSize 95
+skinparam ParticipantPadding 4
+skinparam BoxPadding 4
+skinparam defaultFontSize 15
+autonumber
+participant "Antena RFID" as rfid
+participant "Servicio de\nCronometraje" as cro
+queue "RabbitMQ" as mq
+participant "Servicio de\nResultados" as res
+database "Redis\n(Leaderboard)" as redis
+participant "Servicio de\nNotificaciones" as noti
+actor "Espectador" as esp
+rfid -> cro : lectura (chipId, antenaId, hora)
+cro -> cro : normalizar formato y descartar duplicado
+cro -> mq : publicar AtletaCruzoPuntoControl
+cro --> rfid : ACK (sin esperar cálculos)
+mq -> res : AtletaCruzoPuntoControl
+res -> res : calcular tiempo bruto / neto
+res -> redis : actualizar posición (ZADD)
+res -> mq : publicar ResultadoActualizado
+mq -> noti : ResultadoActualizado
+noti -> noti : AtletaSeguido.notificar() (Observer)
+noti -> esp : WebSocket / Push
+note over rfid, esp : Latencia total objetivo: 2 s como máximo
+@enduml

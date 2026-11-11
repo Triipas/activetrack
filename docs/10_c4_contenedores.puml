@@ -1,0 +1,36 @@
+@startuml
+!pragma layout smetana
+!include <C4/C4_Container>
+LAYOUT_TOP_DOWN()
+Person(usuarios, "Usuarios", "Atleta, Espectador, Organizador, Juez")
+System_Ext(rfid, "Hardware RFID", "Antenas de cronometraje")
+System_Ext(pay, "Pasarela de Pagos", "Cobros")
+System_Ext(push, "Firebase (Push)", "Notificaciones móviles")
+System_Boundary(at, "ActiveTrack") {
+  Container(web, "App Web / PWA", "HTML, CSS, JavaScript", "Interfaz para todos los actores")
+  Container(ins, "Servicio de Inscripciones", "Java, Spring Boot", "Eventos, cupos, precios y pagos")
+  Container(cro, "Servicio de Cronometraje", "Java, Spring Boot", "Ingesta de lecturas RFID")
+  Container(res, "Servicio de Resultados", "Java, Spring Boot", "Tiempos, Leaderboard y disputas")
+  Container(noti, "Servicio de Notificaciones", "Java, Spring Boot", "WebSocket y push a espectadores")
+  ContainerQueue(mq, "Broker de Eventos", "RabbitMQ", "Canal asíncrono entre servicios")
+  ContainerDb(pg, "Base de Datos", "PostgreSQL", "Datos transaccionales")
+  ContainerDb(redis, "Caché", "Redis", "Cupos y Leaderboard")
+}
+Rel(usuarios, web, "Usa", "HTTPS")
+Rel(web, ins, "Llama", "REST")
+Rel(web, res, "Consulta", "REST")
+Rel(web, noti, "Se suscribe", "WebSocket")
+Rel(rfid, cro, "Lecturas", "TCP / REST")
+Rel(ins, mq, "Publica", "AMQP")
+Rel(cro, mq, "Publica", "AMQP")
+Rel(mq, res, "Consume", "AMQP")
+Rel(res, mq, "Publica", "AMQP")
+Rel(mq, noti, "Consume", "AMQP")
+Rel(ins, pg, "Lee/Escribe", "JDBC")
+Rel(cro, pg, "Escribe", "JDBC")
+Rel(res, pg, "Lee/Escribe", "JDBC")
+Rel(ins, redis, "Cupos")
+Rel(res, redis, "Leaderboard")
+Rel(ins, pay, "Cobros", "REST")
+Rel(noti, push, "Push", "REST")
+@enduml

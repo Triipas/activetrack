@@ -1,0 +1,124 @@
+@startuml
+!pragma layout smetana
+!include style.iuml
+hide circle
+hide empty methods
+entity "evento" as evento {
+  * id : BIGINT <<PK>>
+  --
+  nombre : VARCHAR(150)
+  tipo : VARCHAR(20)
+  fecha : TIMESTAMPTZ
+  estado : VARCHAR(20)
+}
+entity "ruta" as ruta {
+  * id : BIGINT <<PK>>
+  --
+  evento_id : BIGINT <<FK>>
+  nombre : VARCHAR(100)
+  distancia_km : NUMERIC(6,2)
+}
+entity "punto_control" as pc {
+  * id : BIGINT <<PK>>
+  --
+  ruta_id : BIGINT <<FK>>
+  nombre : VARCHAR(50)
+  km : NUMERIC(6,2)
+  orden : INT
+  es_meta : BOOLEAN
+  antena_id : VARCHAR(30) <<UK>>
+}
+entity "categoria" as cat {
+  * id : BIGINT <<PK>>
+  --
+  evento_id : BIGINT <<FK>>
+  nombre : VARCHAR(80)
+  edad_min : INT
+  edad_max : INT
+  genero : CHAR(1)
+  cupo_maximo : INT
+}
+entity "tarifa" as tarifa {
+  * id : BIGINT <<PK>>
+  --
+  evento_id : BIGINT <<FK>>
+  nombre : VARCHAR(50)
+  precio : NUMERIC(10,2)
+  vigente_desde : DATE
+  vigente_hasta : DATE
+}
+entity "atleta" as atleta {
+  * id : BIGINT <<PK>>
+  --
+  nombres : VARCHAR(150)
+  documento : VARCHAR(20) <<UK>>
+  fecha_nacimiento : DATE
+  genero : CHAR(1)
+  email : VARCHAR(120)
+}
+entity "inscripcion" as ins {
+  * id : BIGINT <<PK>>
+  --
+  atleta_id : BIGINT <<FK>>
+  categoria_id : BIGINT <<FK>>
+  tarifa_id : BIGINT <<FK>>
+  dorsal : INT
+  chip_id : VARCHAR(30) <<UK>>
+  estado : VARCHAR(20)
+  codigo_qr : VARCHAR(255)
+  expira_en : TIMESTAMP
+}
+entity "pago" as pago {
+  * id : BIGINT <<PK>>
+  --
+  inscripcion_id : BIGINT <<FK>>
+  monto : NUMERIC(10,2)
+  referencia_pasarela : VARCHAR(80)
+  estado : VARCHAR(20)
+  fecha : TIMESTAMP
+}
+entity "lectura_rfid" as lec {
+  * id : BIGINT <<PK>>
+  --
+  inscripcion_id : BIGINT <<FK>>
+  punto_control_id : BIGINT <<FK>>
+  antena_id : VARCHAR(30)
+  marca_tiempo : TIMESTAMPTZ
+  recibido_en : TIMESTAMPTZ
+}
+entity "resultado" as res {
+  * id : BIGINT <<PK>>
+  --
+  inscripcion_id : BIGINT <<FK>>
+  ultimo_punto_id : BIGINT <<FK>>
+  ultimo_punto_orden : INT
+  ultima_marca : TIMESTAMPTZ
+  tiempo_bruto_ms : BIGINT
+  tiempo_neto_ms : BIGINT
+  posicion_general : INT
+  posicion_categoria : INT
+  estado : VARCHAR(20)
+}
+entity "penalizacion" as pen {
+  * id : BIGINT <<PK>>
+  --
+  resultado_id : BIGINT <<FK>>
+  tipo : VARCHAR(20)
+  segundos : INT
+  motivo : VARCHAR(255)
+  juez : VARCHAR(100)
+}
+evento ||--|{ ruta
+ruta ||--|{ pc
+evento ||--|{ cat
+evento ||--|{ tarifa
+atleta ||--o{ ins
+cat ||--o{ ins
+tarifa ||--o{ ins
+ins ||--o| pago
+ins ||--o{ lec
+pc ||--o{ lec
+ins ||--o| res
+pc |o--o{ res
+res ||--o{ pen
+@enduml

@@ -1,0 +1,28 @@
+@startuml
+!pragma layout smetana
+!include style.iuml
+skinparam rectangle {
+  BorderColor #1F4E79
+  BackgroundColor #EAF2FB
+}
+rectangle "Antenas RFID\n(MyLaps / ChronoTrack)" as rfid #FFF3E0
+rectangle "App Web / PWA\n(Atleta, Organizador, Juez)" as web #FFF3E0
+rectangle "Espectadores\n(WebSocket / Push)" as esp #FFF3E0
+package "PRODUCTORES" {
+  rectangle "Servicio de\nInscripciones" as ins
+  rectangle "Servicio de\nCronometraje" as cro
+}
+queue "Broker de Eventos\nRabbitMQ" as mq #C8E6C9
+package "CONSUMIDORES" {
+  rectangle "Servicio de\nResultados" as res
+  rectangle "Servicio de\nNotificaciones" as noti
+}
+web --> ins : REST
+rfid --> cro : TCP / REST
+ins --> mq : InscripcionReservada\nInscripcionConfirmada
+cro --> mq : AtletaCruzoPuntoControl
+mq --> res : AtletaCruzoPuntoControl
+res --> mq : ResultadoActualizado
+mq --> noti : ResultadoActualizado\nInscripcionConfirmada
+noti --> esp : push en menos de 2 s
+@enduml

@@ -1,0 +1,99 @@
+@startuml
+!pragma layout smetana
+!include style.iuml
+hide empty methods
+class Evento {
+  id : Long
+  nombre : String
+  tipo : TipoEvento
+  fecha : LocalDateTime
+  estado : EstadoEvento
+}
+class Ruta {
+  id : Long
+  nombre : String
+  distanciaKm : Double
+}
+class Categoria {
+  id : Long
+  nombre : String
+  edadMin : int
+  edadMax : int
+  genero : String
+  cupoMaximo : int
+}
+class PuntoControl {
+  id : Long
+  nombre : String
+  km : Double
+  orden : int
+  esMeta : boolean
+}
+class Tarifa {
+  id : Long
+  nombre : String
+  precio : BigDecimal
+  vigenteDesde : LocalDate
+  vigenteHasta : LocalDate
+}
+class Atleta {
+  id : Long
+  nombres : String
+  documento : String
+  fechaNacimiento : LocalDate
+  email : String
+}
+class Inscripcion {
+  id : Long
+  dorsal : int
+  chipId : String
+  estado : EstadoInscripcion
+  codigoQR : String
+  + confirmar()
+  + expirar()
+}
+class Pago {
+  id : Long
+  monto : BigDecimal
+  referenciaPasarela : String
+  estado : EstadoPago
+}
+class LecturaRFID {
+  id : Long
+  chipId : String
+  antenaId : String
+  marcaTiempo : Instant
+}
+class Resultado {
+  id : Long
+  tiempoBruto : Duration
+  tiempoNeto : Duration
+  posicionGeneral : int
+  posicionCategoria : int
+  + calcularTiempos()
+}
+class Penalizacion {
+  id : Long
+  tipo : TipoPenalizacion
+  segundos : int
+  motivo : String
+}
+enum EstadoInscripcion {
+  PENDIENTE_PAGO
+  CONFIRMADA
+  EXPIRADA
+  EN_ESPERA
+}
+Evento "1" *-- "1..*" Ruta
+Ruta "1" *-- "1..*" PuntoControl
+Evento "1" *-- "1..*" Categoria
+Evento "1" *-- "1..*" Tarifa
+Atleta "1" -- "0..*" Inscripcion
+Categoria "1" -- "0..*" Inscripcion
+Inscripcion "1" -- "0..1" Pago
+Inscripcion "1" -- "0..*" LecturaRFID
+PuntoControl "1" -- "0..*" LecturaRFID
+Inscripcion "1" -- "0..1" Resultado
+Resultado "1" -- "0..*" Penalizacion
+Inscripcion ..> EstadoInscripcion
+@enduml

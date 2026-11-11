@@ -1,0 +1,40 @@
+@startuml
+!pragma layout smetana
+!include style.iuml
+skinparam packageStyle folder
+left to right direction
+package "activetrack (repositorio GitHub)" {
+  package "frontend (HTML/CSS/JS)" as fe {
+  }
+  package "inscripciones-service" as is {
+  }
+  package "cronometraje-service" as cs {
+  }
+  package "resultados-service" as rs {
+  }
+  package "notificaciones-service" as ns {
+  }
+  package "common-events (contratos de eventos)" as ce {
+  }
+}
+package "Estructura interna de cada servicio" as int {
+  package "controller" as c1 {
+  }
+  package "messaging" as e1 {
+  }
+  package "service" as s1 {
+  }
+  package "model" as m1 {
+  }
+  package "repository" as r1 {
+  }
+}
+is ..> ce
+cs ..> ce
+rs ..> ce
+ns ..> ce
+c1 ..> s1
+e1 ..> s1
+s1 ..> m1
+s1 ..> r1
+@enduml

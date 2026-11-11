@@ -1,0 +1,30 @@
+@startuml
+!pragma layout smetana
+!include <C4/C4_Component>
+LAYOUT_TOP_DOWN()
+ContainerQueue(mq, "Broker de Eventos", "RabbitMQ")
+Container(web, "App Web / PWA", "HTML, CSS, JS")
+ContainerDb(pg, "PostgreSQL", "Resultados y penalizaciones")
+ContainerDb(redis, "Redis", "Leaderboard")
+Container_Boundary(res, "Servicio de Resultados") {
+  Component(listener, "CruceEventListener", "@RabbitListener", "Recibe AtletaCruzoPuntoControl")
+  Component(calc, "CalculoTiemposService", "Spring Service", "Valida la secuencia y calcula tiempo bruto y neto")
+  Component(lb, "LeaderboardService", "Spring Service", "Actualiza y consulta posiciones")
+  Component(disp, "DisputaService", "Spring Service", "Lista anomalías y aplica DSQ / penalidades")
+  Component(api, "ResultadoController", "REST Controller", "Leaderboard, resultados y disputas")
+  Component(repo, "ResultadoRepository", "Spring Data JPA", "Persistencia")
+  Component(pub, "ResultadoEventPublisher", "RabbitTemplate", "Publica ResultadoActualizado")
+}
+Rel(mq, listener, "Entrega evento")
+Rel(listener, calc, "Procesa cruce")
+Rel(disp, calc, "Recalcula tras la decisión del juez")
+Rel(calc, lb, "Actualiza posición")
+Rel(calc, repo, "Guarda")
+Rel(calc, pub, "Notifica cambio")
+Rel(pub, mq, "Publica")
+Rel(web, api, "REST")
+Rel(api, lb, "Consulta")
+Rel(api, disp, "Resuelve disputa")
+Rel(lb, redis, "ZADD / ZRANGE")
+Rel(repo, pg, "JDBC")
+@enduml

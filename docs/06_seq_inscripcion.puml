@@ -1,0 +1,35 @@
+@startuml
+!include style.iuml
+skinparam sequenceParticipantBorderColor #1F4E79
+skinparam sequenceParticipantBackgroundColor #EAF2FB
+skinparam sequenceLifeLineBorderColor #90A4AE
+hide footbox
+skinparam maxMessageSize 95
+skinparam ParticipantPadding 4
+skinparam BoxPadding 4
+skinparam defaultFontSize 15
+autonumber
+actor "Atleta" as at
+participant "App Web" as web
+participant "Servicio de\nInscripciones" as ins
+database "Redis\n(cupos)" as redis
+database "PostgreSQL" as pg
+participant "Pasarela\nde Pagos" as pay
+queue "RabbitMQ" as mq
+at -> web : elegir evento y categoría
+web -> ins : POST /inscripciones
+ins -> redis : DECR cupos:{categoria} (atómico)
+alt hay cupo
+  ins -> pg : guardar Inscripcion (PENDIENTE_PAGO)
+  ins -> mq : publicar InscripcionReservada
+  ins --> web : 202 Accepted + reserva (10 min)
+  web -> pay : pagar (checkout externo)
+  pay -> ins : webhook: pago aprobado
+  ins -> pg : Inscripcion = CONFIRMADA
+  ins -> mq : publicar InscripcionConfirmada
+  note right of mq : Notificaciones envía\nel kit digital (QR)
+else sin cupo
+  ins -> pg : registrar en lista de espera
+  ins --> web : 200 EN_ESPERA
+end
+@enduml

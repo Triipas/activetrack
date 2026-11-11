@@ -1,0 +1,32 @@
+@startuml
+!pragma layout smetana
+!include style.iuml
+skinparam node {
+  BorderColor #1F4E79
+  BackgroundColor #EAF2FB
+}
+node "Dispositivo del usuario" as dev {
+  artifact "Navegador / PWA" as br
+}
+node "Lector RFID en pista" as hw
+rectangle "Nube AWS" #F5F9FD {
+  node "Load Balancer (ALB)" as alb
+  node "Cluster ECS (contenedores Docker)" as ecs {
+    artifact "inscripciones-service x N" as a1
+    artifact "cronometraje-service x N" as a2
+    artifact "resultados-service x N" as a3
+    artifact "notificaciones-service x N" as a4
+  }
+  node "Amazon MQ (RabbitMQ)" as mq
+  database "Amazon RDS\nPostgreSQL" as rds
+  database "ElastiCache\nRedis" as redis
+  node "S3 + CloudFront\n(frontend estático)" as s3
+}
+br --> s3 : HTTPS
+br --> alb : HTTPS / WSS
+hw --> alb : TCP / REST
+alb --> ecs
+ecs --> mq
+ecs --> rds : JDBC
+ecs --> redis : RESP
+@enduml
