@@ -1,0 +1,92 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: >-
+  ActiveTrack - instancia EC2 con Docker en la VPC por defecto. Solo expone HTTP (80) a Internet
+  y SSH (22) a la IP del administrador. La aplicación se instala con scripts/desplegar-vm.sh.
+
+Parameters:
+  KeyName:
+    Type: AWS::EC2::KeyPair::KeyName
+    Description: Par de claves SSH para entrar a la instancia
+  SshCidr:
+    Type: String
+    Description: Rango que puede entrar por SSH (tu IP pública con /32)
+    AllowedPattern: '^(\d{1,3}\.){3}\d{1,3}/\d{1,2}$'
+  InstanceType:
+    Type: String
+    Default: t3.medium
+    AllowedValues: [t3.medium, t3.large]
+    Description: 4 GB de RAM (t3.medium) alcanzan para todos los contenedores
+  AmiId:
+    Type: AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>
+    Default: /aws/service/canonical/ubuntu/server/24.04/stable/current/amd64/hvm/ebs-gp3/ami-id
+    Description: Ubuntu 24.04 LTS (se resuelve automáticamente a la AMI más reciente)
+
+Resources:
+  GrupoSeguridad:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: ActiveTrack - HTTP publico y SSH restringido
+      SecurityGroupIngress:
+        - Description: Frontend (Nginx)
+          IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          CidrIp: 0.0.0.0/0
+        - Description: SSH del administrador
+          IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
+          CidrIp: !Ref SshCidr
+      Tags:
+        - { Key: Name, Value: activetrack }
+        - { Key: Proyecto, Value: activetrack }
+
+  Instancia:
+    Type: AWS::EC2::Instance
+    Properties:
+      ImageId: !Ref AmiId
+      InstanceType: !Ref InstanceType
+      KeyName: !Ref KeyName
+      SecurityGroupIds: [!GetAtt GrupoSeguridad.GroupId]
+      MetadataOptions:
+        HttpTokens: required          # IMDSv2 obligatorio
+      BlockDeviceMappings:
+        - DeviceName: /dev/sda1
+          Ebs:
+            VolumeType: gp3
+            VolumeSize: 30
+            Encrypted: true
+            DeleteOnTermination: true
+      UserData:
+        Fn::Base64: |
+          #!/bin/bash
+          set -euxo pipefail
+          # Docker y 2 GB de swap como margen de memoria durante la compilación
+          curl -fsSL https://get.docker.com | sh
+          usermod -aG docker ubuntu
+          fallocate -l 2G /swapfile && chmod 600 /swapfile && mkswap /swapfile && swapon /swapfile
+          echo '/swapfile none swap sw 0 0' >> /etc/fstab
+          touch /var/lib/cloud/instance/activetrack-listo
+      Tags:
+        - { Key: Name, Value: activetrack }
+        - { Key: Proyecto, Value: activetrack }
+
+  IpElastica:
+    Type: AWS::EC2::EIP
+    Properties:
+      Domain: vpc
+      InstanceId: !Ref Instancia
+      Tags:
+        - { Key: Name, Value: activetrack }
+        - { Key: Proyecto, Value: activetrack }
+
+Outputs:
+  IpPublica:
+    Description: IP fija de la instancia
+    Value: !Ref IpElastica
+  Url:
+    Description: Dirección de la aplicación
+    Value: !Sub "http://${IpElastica}"
+  Ssh:
+    Description: Comando para entrar por SSH
+    Value: !Sub "ssh -i ~/.ssh/${KeyName}.pem ubuntu@${IpElastica}"
