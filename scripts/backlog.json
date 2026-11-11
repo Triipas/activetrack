@@ -1,0 +1,148 @@
+{
+  "sprints": [
+    { "titulo": "Sprint 1 - Arquitectura", "descripcion": "Análisis, drivers arquitectónicos, diseño (4+1, C4, ADRs) y estructura del proyecto." },
+    { "titulo": "Sprint 2 - Procesamiento de tiempos", "descripcion": "PoC: cronometraje, resultados, disputas y notificaciones en tiempo real." },
+    { "titulo": "Sprint 3 - Frontend, pruebas y despliegue", "descripcion": "Interfaz web, pruebas, contenedores y despliegue en la nube." },
+    { "titulo": "Backlog - Inscripciones y administración", "descripcion": "Historias diseñadas pero fuera del alcance de la PoC." }
+  ],
+  "historias": [
+    {
+      "id": "HU-01", "titulo": "Diseño arquitectónico documentado", "tipo": "RNF", "requisito": "Consigna",
+      "sprint": 0, "estado": "hecho",
+      "historia": "Como equipo de desarrollo quiero documentar la arquitectura con el Modelo 4+1, el Modelo C4 y ADRs para justificar las decisiones antes de implementar.",
+      "criterios": ["Informe con drivers funcionales, de calidad y restricciones", "Diagramas 4+1 y C4 (contexto, contenedores, componentes)", "ADRs de arquitectura, broker, base de datos y tiempo real"]
+    },
+    {
+      "id": "HU-02", "titulo": "Estructura del proyecto por servicios", "tipo": "RNF", "requisito": "Consigna",
+      "sprint": 0, "estado": "hecho",
+      "historia": "Como desarrollador quiero un repositorio multi-módulo con un módulo por servicio y contratos de eventos compartidos para trabajar en paralelo sin acoplar los servicios.",
+      "criterios": ["Módulos common-events, cronometraje, resultados y notificaciones", "Misma estructura de paquetes en cada servicio", "Compila con el Maven Wrapper"]
+    },
+    {
+      "id": "HU-03", "titulo": "Recibir lecturas RFID de las antenas", "tipo": "RF", "requisito": "RF-07",
+      "sprint": 1, "estado": "hecho",
+      "historia": "Como antena RFID quiero enviar cada detección de chip al sistema para que el cruce del atleta quede registrado.",
+      "criterios": ["POST /api/lecturas responde 202 sin esperar cálculos", "Las lecturas repetidas del mismo chip en el mismo punto se descartan", "Chip o antena desconocidos se rechazan con 422", "Se publica el evento AtletaCruzoPuntoControl"]
+    },
+    {
+      "id": "HU-04", "titulo": "Calcular tiempo bruto y neto", "tipo": "RF", "requisito": "RF-08",
+      "sprint": 1, "estado": "hecho",
+      "historia": "Como atleta quiero que mi tiempo se calcule desde la largada oficial (bruto) y desde que pisé la salida (neto) para conocer mi marca real.",
+      "criterios": ["Bruto = cruce - largada oficial", "Neto = cruce - lectura de salida (o bruto si no hubo lectura)", "Las penalidades de tiempo se suman a ambos"]
+    },
+    {
+      "id": "HU-05", "titulo": "Leaderboard en tiempo real", "tipo": "RF", "requisito": "RF-09",
+      "sprint": 1, "estado": "hecho",
+      "historia": "Como espectador quiero ver la tabla de posiciones general y por categoría actualizarse sola para seguir la carrera en vivo.",
+      "criterios": ["Ordena por punto más avanzado y luego por menor tiempo neto", "Filtro por categoría", "Los descalificados aparecen al final", "Se actualiza sin recargar la página"]
+    },
+    {
+      "id": "HU-06", "titulo": "Seguir atletas y recibir notificaciones", "tipo": "RF", "requisito": "RF-10",
+      "sprint": 1, "estado": "hecho",
+      "historia": "Como espectador quiero seguir a uno o más atletas para recibir un aviso cada vez que crucen un punto de control.",
+      "criterios": ["Suscripción por WebSocket (patrón Observer)", "Canal push mediante token de dispositivo", "Quien deja de seguir ya no recibe avisos"]
+    },
+    {
+      "id": "HU-07", "titulo": "Detectar anomalías y aplicar sanciones", "tipo": "RF", "requisito": "RF-11",
+      "sprint": 1, "estado": "hecho",
+      "historia": "Como juez de ruta quiero ver los atletas que omitieron un punto de control y decidir una sanción para garantizar resultados justos.",
+      "criterios": ["Un atleta con punto omitido queda en estado OBSERVADO", "El juez puede aplicar DSQ, penalidad de tiempo o sin sanción", "El leaderboard y los seguidores se actualizan tras la decisión"]
+    },
+    {
+      "id": "HU-08", "titulo": "Monitorear el estado de las antenas", "tipo": "RF", "requisito": "RF-12",
+      "sprint": 1, "estado": "hecho",
+      "historia": "Como cronometrador quiero ver cuántas lecturas envió cada antena y cuándo fue su última señal para detectar fallas de conectividad.",
+      "criterios": ["Lista de antenas con punto de control y km", "Total de lecturas y tiempo desde la última señal"]
+    },
+    {
+      "id": "HU-09", "titulo": "Latencia máxima de 2 segundos", "tipo": "RNF", "requisito": "RNF-01",
+      "sprint": 1, "estado": "hecho",
+      "historia": "Como espectador quiero recibir el tiempo del atleta en menos de 2 segundos desde que pisa la alfombra para vivir la carrera en tiempo real.",
+      "criterios": ["Procesamiento asíncrono por eventos (RabbitMQ)", "Leaderboard en Redis", "La interfaz muestra la latencia medida de cada actualización"]
+    },
+    {
+      "id": "HU-10", "titulo": "No perder lecturas ni resultados", "tipo": "RNF", "requisito": "RNF-03",
+      "sprint": 1, "estado": "hecho",
+      "historia": "Como organizador quiero que ninguna lectura se pierda aunque un servicio falle para confiar en los resultados oficiales.",
+      "criterios": ["Colas durables", "Reintentos y cola de mensajes fallidos (DLQ)", "Lecturas persistidas en PostgreSQL antes de publicar"]
+    },
+    {
+      "id": "HU-11", "titulo": "Interfaz web del evento", "tipo": "RF", "requisito": "RF-09, RF-10, RF-11",
+      "sprint": 2, "estado": "hecho",
+      "historia": "Como usuario quiero una interfaz web responsive con leaderboard, seguimiento, panel del juez y simulador para usar el sistema desde cualquier dispositivo.",
+      "criterios": ["HTML, CSS y JavaScript sin frameworks", "Conexión WebSocket con reconexión automática", "Usable en celular"]
+    },
+    {
+      "id": "HU-12", "titulo": "Pruebas automatizadas", "tipo": "RNF", "requisito": "Consigna",
+      "sprint": 2, "estado": "hecho",
+      "historia": "Como equipo quiero pruebas unitarias de las reglas de negocio y del patrón Observer para detectar errores antes de entregar.",
+      "criterios": ["Pruebas de cálculo de tiempos, secuencia, leaderboard y estados", "Pruebas del Observer (suscripción, baja, fallas de canal)", "./mvnw test en verde"]
+    },
+    {
+      "id": "HU-13", "titulo": "Ejecución en contenedores", "tipo": "RNF", "requisito": "RNF-04",
+      "sprint": 2, "estado": "hecho",
+      "historia": "Como equipo quiero levantar todo el sistema con un solo comando para probarlo y desplegarlo igual en cualquier entorno.",
+      "criterios": ["docker compose up --build levanta servicios, broker, bases de datos y frontend", "Variables de entorno para la configuración"]
+    },
+    {
+      "id": "HU-14", "titulo": "Despliegue en la nube", "tipo": "RNF", "requisito": "RNF-04",
+      "sprint": 2, "estado": "pendiente",
+      "historia": "Como organizador quiero el sistema desplegado en la nube para usarlo durante el evento real.",
+      "criterios": ["Servicios en AWS ECS detrás de un balanceador", "Amazon MQ, RDS PostgreSQL y ElastiCache Redis", "URL pública del frontend"]
+    },
+    {
+      "id": "HU-15", "titulo": "Gestionar eventos, rutas y categorías", "tipo": "RF", "requisito": "RF-01",
+      "sprint": 3, "estado": "pendiente",
+      "historia": "Como organizador quiero crear eventos con rutas, categorías y puntos de control para configurar cada competencia.",
+      "criterios": ["CRUD de eventos, rutas, categorías y puntos de control", "Asignar una antena a cada punto de control"]
+    },
+    {
+      "id": "HU-16", "titulo": "Configurar cupos y precios dinámicos", "tipo": "RF", "requisito": "RF-02",
+      "sprint": 3, "estado": "pendiente",
+      "historia": "Como organizador quiero definir cupos por categoría y tarifas por vigencia (Early Bird) para maximizar las inscripciones.",
+      "criterios": ["Cupo máximo por categoría", "Tarifa vigente según la fecha de inscripción"]
+    },
+    {
+      "id": "HU-17", "titulo": "Inscribirse con validación de cupo", "tipo": "RF", "requisito": "RF-03, RF-05",
+      "sprint": 3, "estado": "pendiente",
+      "historia": "Como atleta quiero inscribirme y saber al instante si tengo cupo o quedo en lista de espera para asegurar mi participación.",
+      "criterios": ["Reserva atómica del cupo en Redis", "Reserva de 10 minutos para pagar", "Lista de espera cuando no hay cupo"]
+    },
+    {
+      "id": "HU-18", "titulo": "Pagar la inscripción", "tipo": "RF", "requisito": "RF-04",
+      "sprint": 3, "estado": "pendiente",
+      "historia": "Como atleta quiero pagar con una pasarela externa para confirmar mi inscripción.",
+      "criterios": ["Checkout externo en modo sandbox", "Webhook de pago confirma la inscripción", "Evento InscripcionConfirmada"]
+    },
+    {
+      "id": "HU-19", "titulo": "Descargar kit digital (QR)", "tipo": "RF", "requisito": "RF-06",
+      "sprint": 3, "estado": "pendiente",
+      "historia": "Como atleta quiero descargar mi kit digital con código QR para recoger mi dorsal y chip.",
+      "criterios": ["Código QR único por inscripción", "Disponible al confirmarse el pago"]
+    },
+    {
+      "id": "HU-20", "titulo": "Reembolsos y exportación de datos", "tipo": "RF", "requisito": "RF-13",
+      "sprint": 3, "estado": "pendiente",
+      "historia": "Como organizador quiero emitir reembolsos y exportar los datos del evento para la gestión administrativa.",
+      "criterios": ["Reembolso vía pasarela", "Exportación CSV de inscritos y resultados"]
+    },
+    {
+      "id": "HU-21", "titulo": "Historial de resultados del atleta", "tipo": "RF", "requisito": "RF-14",
+      "sprint": 3, "estado": "pendiente",
+      "historia": "Como atleta quiero consultar mis resultados históricos y métricas para ver mi evolución.",
+      "criterios": ["Lista de eventos con tiempos y posiciones", "Ritmo promedio por kilómetro"]
+    },
+    {
+      "id": "HU-22", "titulo": "Soportar 10 000 usuarios concurrentes en inscripción", "tipo": "RNF", "requisito": "RNF-02, RNF-07",
+      "sprint": 3, "estado": "pendiente",
+      "historia": "Como organizador quiero que la apertura de inscripciones soporte 10 000 usuarios en 5 minutos sin caídas ni sobreventa para no perder ventas.",
+      "criterios": ["Prueba de carga con k6 o JMeter", "0 errores 5xx y respuesta ≤ 1 s", "Ningún cupo sobrevendido"]
+    },
+    {
+      "id": "HU-23", "titulo": "Autenticación por roles", "tipo": "RNF", "requisito": "RNF-06",
+      "sprint": 3, "estado": "pendiente",
+      "historia": "Como organizador quiero que solo los jueces puedan aplicar sanciones y solo los organizadores configurar eventos para proteger la integridad del sistema.",
+      "criterios": ["JWT con roles ATLETA, ORGANIZADOR, JUEZ", "Endpoints del juez protegidos"]
+    }
+  ]
+}
