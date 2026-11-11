@@ -52,6 +52,30 @@ public class MensajeriaConfig {
     }
 
     @Bean
+    public Queue colaInscripciones() {
+        return QueueBuilder.durable(Colas.COLA_NOTIFICACIONES_INSCRIPCIONES)
+                .withArgument("x-dead-letter-exchange", Colas.DLX)
+                .withArgument("x-dead-letter-routing-key", Colas.COLA_NOTIFICACIONES_INSCRIPCIONES + ".dlq")
+                .build();
+    }
+
+    @Bean
+    public Queue colaInscripcionesFallidas() {
+        return QueueBuilder.durable(Colas.COLA_NOTIFICACIONES_INSCRIPCIONES + ".dlq").build();
+    }
+
+    @Bean
+    public Binding bindingInscripciones(Queue colaInscripciones, TopicExchange eventosExchange) {
+        return BindingBuilder.bind(colaInscripciones).to(eventosExchange).with(Colas.RK_INSCRIPCIONES);
+    }
+
+    @Bean
+    public Binding bindingInscripcionesFallidas(Queue colaInscripcionesFallidas, DirectExchange deadLetterExchange) {
+        return BindingBuilder.bind(colaInscripcionesFallidas).to(deadLetterExchange)
+                .with(Colas.COLA_NOTIFICACIONES_INSCRIPCIONES + ".dlq");
+    }
+
+    @Bean
     public MessageConverter jsonMessageConverter(ObjectMapper objectMapper) {
         return new Jackson2JsonMessageConverter(objectMapper);
     }

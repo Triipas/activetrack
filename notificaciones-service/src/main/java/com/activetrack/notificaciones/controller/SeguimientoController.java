@@ -1,6 +1,7 @@
 package com.activetrack.notificaciones.controller;
 
 import com.activetrack.notificaciones.observer.PushSeguidor;
+import com.activetrack.notificaciones.service.CorreoSimuladoGateway;
 import com.activetrack.notificaciones.service.GestorSeguimientos;
 import com.activetrack.notificaciones.service.PushSimuladoGateway;
 import com.activetrack.notificaciones.service.PushSimuladoGateway.PushEnviado;
@@ -25,10 +26,13 @@ public class SeguimientoController {
 
     private final GestorSeguimientos gestor;
     private final PushSimuladoGateway pushGateway;
+    private final CorreoSimuladoGateway correoGateway;
 
-    public SeguimientoController(GestorSeguimientos gestor, PushSimuladoGateway pushGateway) {
+    public SeguimientoController(GestorSeguimientos gestor, PushSimuladoGateway pushGateway,
+                                 CorreoSimuladoGateway correoGateway) {
         this.gestor = gestor;
         this.pushGateway = pushGateway;
+        this.correoGateway = correoGateway;
     }
 
     /** Suscribe un dispositivo móvil (token push) a los cruces de un atleta. */
@@ -43,6 +47,12 @@ public class SeguimientoController {
     @GetMapping("/api/seguimientos")
     public Map<Long, Integer> estadisticas() {
         return gestor.estadisticas();
+    }
+
+    /** Últimos correos enviados a los atletas (simulados en la PoC). */
+    @GetMapping("/api/correos")
+    public List<CorreoSimuladoGateway.CorreoEnviado> correos() {
+        return correoGateway.historial();
     }
 
     /** Últimas notificaciones push enviadas (simuladas en la PoC). */
