@@ -28,6 +28,7 @@
         <module>cronometraje-service</module>
         <module>resultados-service</module>
         <module>notificaciones-service</module>
+        <module>inscripciones-service</module>
     </modules>
 
     <dependencyManagement>

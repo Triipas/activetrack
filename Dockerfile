@@ -8,6 +8,7 @@ COPY common-events/pom.xml common-events/
 COPY cronometraje-service/pom.xml cronometraje-service/
 COPY resultados-service/pom.xml resultados-service/
 COPY notificaciones-service/pom.xml notificaciones-service/
+COPY inscripciones-service/pom.xml inscripciones-service/
 RUN mvn -B -q -pl ${MODULE} -am dependency:go-offline || true
 COPY . .
 RUN mvn -B -q -pl ${MODULE} -am package -DskipTests

@@ -1,0 +1,41 @@
+server:
+  port: 8084
+
+spring:
+  application:
+    name: inscripciones-service
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/activetrack}
+    username: ${DB_USER:activetrack}
+    password: ${DB_PASSWORD:activetrack}
+    hikari:
+      maximum-pool-size: 30
+  jpa:
+    hibernate:
+      ddl-auto: none
+    open-in-view: false
+    properties:
+      hibernate.jdbc.time_zone: UTC
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: 6379
+  rabbitmq:
+    host: ${RABBIT_HOST:localhost}
+    port: 5672
+    username: ${RABBIT_USER:guest}
+    password: ${RABBIT_PASSWORD:guest}
+
+seguridad:
+  jwt:
+    # En producción se define con la variable de entorno JWT_SECRET (mínimo 32 caracteres).
+    secreto: ${JWT_SECRET:activetrack-clave-de-desarrollo-cambiar-en-produccion}
+    horas-validez: 8
+
+inscripciones:
+  minutos-reserva: ${MINUTOS_RESERVA:10}
+  revision-expiracion-ms: 15000
+
+logging:
+  level:
+    com.activetrack: INFO
