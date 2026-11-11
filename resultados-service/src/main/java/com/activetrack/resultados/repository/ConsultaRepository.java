@@ -149,6 +149,61 @@ public class ConsultaRepository {
         return jdbc.queryForList("SELECT id FROM categoria WHERE evento_id = ?", Long.class, eventoId);
     }
 
+    /** Fila de resultado con posiciones calculadas (general y por categoría). */
+    public record FilaResultado(Long eventoId, String evento, Instant fecha, String atleta, String documento,
+                                String categoria, Integer dorsal, String estado, String ultimoPunto, Double km,
+                                Long tiempoNetoMs, Long tiempoBrutoMs, Long posicionGeneral, Long posicionCategoria) {
+    }
+
+    /**
+     * Ranking: primero quien llegó más lejos y luego el menor tiempo neto. Los descalificados no tienen posición.
+     */
+    private static final String SQL_RESULTADOS = """
+            WITH ranking AS (
+                SELECT r.inscripcion_id,
+                       RANK() OVER (PARTITION BY c.evento_id ORDER BY r.ultimo_punto_orden DESC, r.tiempo_neto_ms) AS pos_general,
+                       RANK() OVER (PARTITION BY i.categoria_id ORDER BY r.ultimo_punto_orden DESC, r.tiempo_neto_ms) AS pos_categoria
+                FROM resultado r
+                JOIN inscripcion i ON i.id = r.inscripcion_id
+                JOIN categoria c ON c.id = i.categoria_id
+                WHERE r.estado <> 'DSQ'
+            )
+            SELECT e.id AS evento_id, e.nombre AS evento, e.fecha, a.nombres, a.documento, c.nombre AS categoria,
+                   i.dorsal, r.estado, p.nombre AS ultimo_punto, p.km, r.tiempo_neto_ms, r.tiempo_bruto_ms,
+                   rk.pos_general, rk.pos_categoria
+            FROM resultado r
+            JOIN inscripcion i ON i.id = r.inscripcion_id
+            JOIN atleta a ON a.id = i.atleta_id
+            JOIN categoria c ON c.id = i.categoria_id
+            JOIN evento e ON e.id = c.evento_id
+            LEFT JOIN punto_control p ON p.id = r.ultimo_punto_id
+            LEFT JOIN ranking rk ON rk.inscripcion_id = r.inscripcion_id
+            """;
+
+    public List<FilaResultado> resultadosDeAtleta(String documento) {
+        return jdbc.query(SQL_RESULTADOS + " WHERE a.documento = ? ORDER BY e.fecha DESC",
+                (rs, n) -> filaResultado(rs), documento);
+    }
+
+    public List<FilaResultado> resultadosDeEvento(Long eventoId) {
+        return jdbc.query(SQL_RESULTADOS + " WHERE e.id = ? ORDER BY rk.pos_general NULLS LAST, i.dorsal",
+                (rs, n) -> filaResultado(rs), eventoId);
+    }
+
+    public Optional<String> nombreAtleta(String documento) {
+        return jdbc.queryForList("SELECT nombres FROM atleta WHERE documento = ?", String.class, documento)
+                .stream().findFirst();
+    }
+
+    private static FilaResultado filaResultado(ResultSet rs) throws SQLException {
+        return new FilaResultado(rs.getLong("evento_id"), rs.getString("evento"), instante(rs, "fecha"),
+                rs.getString("nombres"), rs.getString("documento"), rs.getString("categoria"),
+                (Integer) rs.getObject("dorsal"), rs.getString("estado"), rs.getString("ultimo_punto"),
+                rs.getObject("km") == null ? null : rs.getDouble("km"),
+                (Long) rs.getObject("tiempo_neto_ms"), (Long) rs.getObject("tiempo_bruto_ms"),
+                (Long) rs.getObject("pos_general"), (Long) rs.getObject("pos_categoria"));
+    }
+
     /** Solo para la demo: borra resultados y penalizaciones del evento. */
     public void borrarResultados(Long eventoId) {
         jdbc.update("DELETE FROM penalizacion WHERE resultado_id IN "

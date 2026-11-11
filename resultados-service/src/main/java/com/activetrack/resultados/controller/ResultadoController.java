@@ -11,6 +11,10 @@ import com.activetrack.resultados.service.DisputaService.Anomalia;
 import com.activetrack.resultados.service.DisputaService.DecisionJuez;
 import com.activetrack.resultados.service.LeaderboardService;
 import com.activetrack.resultados.service.LeaderboardService.LeaderboardFila;
+import com.activetrack.resultados.service.ReporteService;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import java.nio.charset.StandardCharsets;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
@@ -41,11 +45,14 @@ public class ResultadoController {
     private final LeaderboardService leaderboard;
     private final DisputaService disputas;
     private final ConsultaRepository consultas;
+    private final ReporteService reportes;
 
-    public ResultadoController(LeaderboardService leaderboard, DisputaService disputas, ConsultaRepository consultas) {
+    public ResultadoController(LeaderboardService leaderboard, DisputaService disputas, ConsultaRepository consultas,
+                               ReporteService reportes) {
         this.leaderboard = leaderboard;
         this.disputas = disputas;
         this.consultas = consultas;
+        this.reportes = reportes;
     }
 
     @GetMapping("/api/eventos/{eventoId}")
@@ -80,6 +87,25 @@ public class ResultadoController {
                                           @Valid @RequestBody PenalizacionRequest request) {
         return disputas.aplicarDecision(inscripcionId,
                 new DecisionJuez(request.tipo(), request.segundos(), request.motivo(), request.juez()));
+    }
+
+    /** Historial del atleta: resultados de todos sus eventos, posiciones y ritmo. */
+    @GetMapping("/api/resultados/atletas/{documento}/historial")
+    public ReporteService.Historial historial(@PathVariable String documento) {
+        return reportes.historial(documento);
+    }
+
+    @GetMapping("/api/eventos/{eventoId}/resultados.csv")
+    public ResponseEntity<byte[]> resultadosCsv(@PathVariable Long eventoId) {
+        byte[] bom = {(byte) 0xEF, (byte) 0xBB, (byte) 0xBF};
+        byte[] datos = reportes.resultadosCsv(eventoId).getBytes(StandardCharsets.UTF_8);
+        byte[] contenido = new byte[bom.length + datos.length];
+        System.arraycopy(bom, 0, contenido, 0, bom.length);
+        System.arraycopy(datos, 0, contenido, bom.length, datos.length);
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=resultados-evento-" + eventoId + ".csv")
+                .contentType(new MediaType("text", "csv", StandardCharsets.UTF_8))
+                .body(contenido);
     }
 
     /** Solo para la demo: borra resultados, penalizaciones y el leaderboard del evento. */
