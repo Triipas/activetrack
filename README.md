@@ -78,10 +78,11 @@ activetrack/
 ├── db/init.sql               Esquema y datos semilla (2 eventos, 12 atletas ficticios, usuarios de demo)
 ├── pruebas-carga/            Prueba de carga k6 de la apertura de inscripciones y sus resultados
 ├── docs/                     Informe, backlog Scrum y diagramas (PlantUML + PNG)
-├── scripts/                  Backlog (JSON) y script que crea el tablero en GitHub Projects
-├── .github/workflows/ci.yml  Pruebas automáticas en GitHub Actions
+├── scripts/                  Backlog, tablero de GitHub Projects y despliegue a la VM
+├── .github/workflows/        ci.yml (pruebas) y desplegar.yml (despliegue manual a la VM)
 ├── Dockerfile                Imagen de los servicios (se elige el módulo con MODULE)
-└── docker-compose.yml
+├── docker-compose.yml        Entorno de desarrollo
+└── docker-compose.prod.yml   Ajustes de producción para la VM
 ```
 
 ## Cómo ejecutarlo
@@ -158,9 +159,17 @@ node scripts/crear-backlog-github.mjs
 | POST | `/api/seguimientos/push` | Notificaciones | — | Suscribe un token push a un atleta |
 | GET | `/api/correos` | Notificaciones | — | Últimos correos enviados (simulados) |
 
-## Despliegue en la nube (AWS)
+## Despliegue en la nube
 
-Cada servicio es una imagen Docker independiente, por lo que se despliega igual en AWS ECS (Fargate) detrás de un
-Application Load Balancer, con Amazon MQ (RabbitMQ), Amazon RDS (PostgreSQL) y ElastiCache (Redis). Solo cambian
-las variables de entorno `DB_URL`, `DB_USER`, `DB_PASSWORD`, `RABBIT_HOST`, `RABBIT_USER`, `RABBIT_PASSWORD`,
-`REDIS_HOST` y `JWT_SECRET`.
+**VM con Docker** (lo implementado): una máquina Linux de 4 GB en cualquier proveedor, con un solo comando:
+
+```bash
+cp .env.prod.example .env.prod   # y cambiar todas las claves
+scripts/desplegar-vm.sh ubuntu@IP_DE_LA_VM ~/.ssh/mi_clave
+```
+
+Solo el frontend queda expuesto; claves propias, volumen persistente y límites de memoria. Guía completa en
+[docs/despliegue-vm.md](docs/despliegue-vm.md). También se puede lanzar desde GitHub Actions (workflow *Desplegar en la VM*).
+
+**Escalado futuro (AWS administrado)**: como cada servicio es una imagen independiente, se puede pasar a ECS (Fargate)
+detrás de un Application Load Balancer, con Amazon MQ, RDS y ElastiCache, cambiando solo las variables de entorno.
