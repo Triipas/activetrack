@@ -44,10 +44,11 @@ echo "==> 1/3 Empaquetando el commit $(git rev-parse --short HEAD)"
 git archive --format=tar.gz -o "$PAQUETE" HEAD
 
 echo "==> 2/3 Copiando a $DESTINO"
-scp "${SSH_OPCIONES[@]}" "$PAQUETE" .env.prod "$DESTINO:~/"
+scp "${SSH_OPCIONES[@]}" "$PAQUETE" .env.prod scripts/vm/remoto.sh "$DESTINO:~/"
 
 echo "==> 3/3 Instalando y levantando en la VM (la primera vez tarda varios minutos)"
-ssh "${SSH_OPCIONES[@]}" "$DESTINO" 'bash -s' < scripts/vm/remoto.sh
+# El script se ejecuta desde un archivo (no por stdin) para que ningún comando consuma sus líneas.
+ssh "${SSH_OPCIONES[@]}" "$DESTINO" 'bash ~/remoto.sh && rm -f ~/remoto.sh'
 
 rm -f "$PAQUETE"
 echo "==> Listo: http://${DESTINO#*@}"

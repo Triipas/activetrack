@@ -19,11 +19,11 @@ rm -f "$HOME/activetrack.tar.gz"
 cd "$DIRECTORIO"
 
 echo "--> Construyendo y levantando los contenedores"
-"${COMPOSE[@]}" up -d --build --remove-orphans
+"${COMPOSE[@]}" up -d --build --remove-orphans </dev/null
 
 echo "--> Esperando a la base de datos"
 for _ in $(seq 1 60); do
-  if "${COMPOSE[@]}" exec -T postgres pg_isready -U activetrack -d activetrack >/dev/null 2>&1; then
+  if "${COMPOSE[@]}" exec -T postgres pg_isready -U activetrack -d activetrack </dev/null >/dev/null 2>&1; then
     break
   fi
   sleep 2
@@ -40,4 +40,5 @@ UPDATE usuario SET clave_hash = crypt(:'clave_org', gen_salt('bf', 10)) WHERE us
 UPDATE usuario SET clave_hash = crypt(:'clave_juez', gen_salt('bf', 10)) WHERE usuario = 'juez';
 SQL
 
-"${COMPOSE[@]}" ps --format 'table {{.Service}}\t{{.Status}}'
+echo "--> Claves de organizador y juez actualizadas"
+"${COMPOSE[@]}" ps --format 'table {{.Service}}\t{{.Status}}' </dev/null
